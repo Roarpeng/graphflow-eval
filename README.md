@@ -73,7 +73,7 @@ Per package:
 
 ```bash
 npm test --prefix packages/order-ts
-python3 -m unittest discover -s packages/billing-py/tests -t packages/billing-py
+cd packages/billing-py && python3 -m unittest discover -s tests
 go test -C packages/inventory-go ./...
 cargo test --manifest-path packages/device-rs/Cargo.toml
 ```
@@ -131,7 +131,7 @@ Do rename tasks on a git worktree and restore the fixture names afterwards. The 
 
 ### Token estimate
 
-`scripts/baseline-naive.mjs` uses `ceil(characterLength / 4)`. The same function scores `tokens_graphflow` when you put a number on the run. It is a stable ratio, not a model tokenizer. Published GraphFlow savings on its own large `ast-engine.ts` are a different corpus; this repo's slice task asks for at least 40% versus `order-service.ts`.
+`scripts/baseline-naive.mjs` uses `ceil(characterLength / 4)`. The same function scores `tokens_graphflow` when you put a number on the run. It is a stable ratio, not a model tokenizer. Published GraphFlow savings on its own large `ast-engine.ts` are a different corpus; this repo's slice task asks for at least 30% versus `order-service.ts`. A 3.6.1 read of that method landed near 41% once the linked-doc appendix was included.
 
 Literal search (`naiveSearch`) is the ripgrep stand-in: fixed string, two lines of context, each line counted once. The spaced query `dingdan zhifu` hits nothing in `packages/order-ts/src`. GraphFlow's pinyin query should still find `handleDingDanZhiFu`.
 

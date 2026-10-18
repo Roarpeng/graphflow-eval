@@ -11,7 +11,7 @@
   "scripts": {
     "test": "node --test scripts/score.test.mjs",
     "test:order": "npm test --prefix packages/order-ts",
-    "test:billing": "python3 -m unittest discover -s packages/billing-py/tests -t packages/billing-py",
+    "test:billing": "cd packages/billing-py && python3 -m unittest discover -s tests",
     "test:inventory": "go test -C packages/inventory-go ./...",
     "test:device": "cargo test --manifest-path packages/device-rs/Cargo.toml",
     "test:fixtures": "npm run test:order && npm run test:billing && npm run test:inventory && npm run test:device",

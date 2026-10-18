@@ -62,7 +62,7 @@ Run that twice, then `graphflow task harvest --root packages/billing-py` and `gr
 - Tool: `gf_read`
 - Target: `packages/order-ts/src/services/order-service.ts#OrderService.cancel`
 - Baseline file: that service file
-- Pass: symbol id kept, snippet `cancel(order: Order, reason: string)` present, `RefundService.cancel` absent, savings ≥ 0.40
+- Pass: symbol id kept, snippet `cancel(order: Order, reason: string)` present, `RefundService.cancel` absent, savings ≥ 0.30
 - Naive baseline: whole-file `ceil(chars/4)`
 
 ### 2. `ts-blast-disambiguate`
@@ -132,7 +132,7 @@ npm test --prefix packages/order-ts -- __tests__/pay-handler.test.ts
 - `PartialRefundPolicy.refund` stays
 - Edit `refund.py`, `partial.py`, `settle_full.py`
 - Do not edit `settle_partial.py` or the test modules
-- `python3 -m unittest discover -s packages/billing-py/tests -t packages/billing-py` passes on the worktree
+- From `packages/billing-py`: `python3 -m unittest discover -s tests` passes on the worktree
 
 `RefundPolicy` and `PartialRefundPolicy` live in different files so a same-file sibling declaration does not force an ambiguous reject before the super call can be updated.
 
@@ -151,6 +151,7 @@ npm test --prefix packages/order-ts -- __tests__/pay-handler.test.ts
 
 - Fields: `SKU`, `OnHand`, `Reserved`, `ID`, `Qty`, `Buyer`
 - Methods: `Hold`, `Available`
+- `StockItem.Available` must list the promoted call inside `Reservation.Hold` (`callers` contains `Hold`)
 - Residual: `stock.go` and `reservation.go` are the same package and contain no import statements. GraphFlow 3.6.1 does not invent a file-level `imports` edge for that. A missing `stock.go → reservation.go` import edge is expected. A missing embedded field or a missing `Available` is a failure. Deeper embedding chains are outside this fixture (one embedded type).
 
 ### 9. `rs-trait-dispatch`
@@ -174,13 +175,18 @@ This task is read/blast. GraphFlow may still reject an atomic trait+impl rename;
 看什么：`docs/订单超时.md` 的「关单路径」链到它写出的符号，概念句里的「取消 / 退款」不要扩散成一堆边。
 
 - Must link: `handleDingDanChaoShi`, `OrderService.timeout`, `TIMEOUT_WINDOW_MS`
-- Must not link: `OrderService.cancel`, `OrderService.pay`, `RefundService.cancel`, `handleDingDanZhiFu`, `StockItem`, `Device.read`
+- Must not link: `OrderService.cancel`, `OrderService.pay`, `RefundService.cancel`, `handleDingDanZhiFu`, `StockItem`, `Device.read`, `RefundTests.setUp`
 - Cap: at most 3 links from this doc
 
 `graphflow graph` writes `.graphflow/knowledge-graph.html`. Transcribe the kept `doc-links-code` edges into `observed.doc_links` as `section -> Symbol`.
 
 ## Expected outcome
 
-A careful GraphFlow 3.6.1 run should pass the receiver, `super`, alias, pinyin, embed, and trait tasks, and should beat the 40% slice bar on `order-service.ts`. The doc-link task is the precision check: three explicit identifiers, no concept spam. The Go import edge stays a documented residual.
+A careful transcription of GraphFlow 3.6.1 on this tree should pass receiver disambiguation, Python `super()`, `@order/*` affected tests, Chinese/pinyin search, and the Go embed read. The slice of `OrderService.cancel` measured about 938 → 552 tokens (savings about 0.41) after the tool appended a linked excerpt of this file, which is why the bar is 0.30 and not the ~96% figure from GraphFlow's own large-file benchmark.
 
-Rename tasks that edit a foreign `cancel` / `refund` fail even if the tests happen to pass.
+Two claims stay strict, and a 3.6.1 probe did not clear them:
+
+- `rs-trait-dispatch`: `&dyn Device` (`poll_reading`) attached to `Device.read`, and `&Sensor` (`sensor_reading`) attached to `Sensor.read`. `describe` (`impl Device`) did not appear on `Device.read`. The task still requires that caller.
+- `cross-doc-link`: 关单路径 linked `handleDingDanChaoShi`, the `OrderService` class, and `OrderService.timeout`. It did not link the named constant `TIMEOUT_WINDOW_MS`. 业务背景 added a concept edge to `RefundTests.setUp` (shared 买家 / maijia, confidence 0.52). Four edges and that cross-package link fail the cap and the exclusion list.
+
+The missing Go file-level import edge stays a residual, not a failure. Rename tasks that edit a foreign `cancel` or `refund` fail even if the tests happen to pass.

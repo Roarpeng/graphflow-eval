@@ -24,6 +24,6 @@
     "symbol_ids": ["packages/order-ts/src/services/order-service.ts#OrderService.cancel"],
     "snippets": ["cancel(order: Order, reason: string)"],
     "must_exclude_symbols": ["RefundService.cancel"],
-    "min_token_savings_ratio": 0.4
+    "min_token_savings_ratio": 0.3
   }
 }

@@ -31,7 +31,7 @@
     },
     {
       "kind": "cli",
-      "command": "python3 -m unittest discover -s packages/billing-py/tests -t packages/billing-py",
+      "command": "cd packages/billing-py && python3 -m unittest discover -s tests",
       "expect": "Tests pass after the rename."
     }
   ],

@@ -23,7 +23,8 @@
       "RefundService.cancel",
       "handleDingDanZhiFu",
       "StockItem",
-      "Device.read"
+      "Device.read",
+      "RefundTests.setUp"
     ],
     "max_doc_links": 3
   }

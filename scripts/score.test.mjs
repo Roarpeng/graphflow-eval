@@ -160,6 +160,7 @@ test("normalized blast, search, embed, trait, doc, and harvest observations pass
           symbol_ids: ["packages/inventory-go/reservation.go#Reservation"],
           fields: ["SKU", "OnHand", "Reserved", "ID", "Qty", "Buyer"],
           methods: ["Hold", "Available"],
+          callers: ["Reservation.Hold"],
         },
       },
       {
