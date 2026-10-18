@@ -1,0 +1,38 @@
+{
+  "id": "ts-blast-disambiguate",
+  "package": "order-ts",
+  "title": "OrderService.cancel blast radius excludes RefundService.cancel",
+  "metric_focus": ["correctness"],
+  "tool": "gf_read",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow read packages/order-ts/src/services/order-service.ts#OrderService.cancel",
+      "mcp": {
+        "tool": "gf_read",
+        "arguments": {
+          "targets": ["packages/order-ts/src/services/order-service.ts#OrderService.cancel"]
+        }
+      },
+      "expect": "Read the [Blast Radius] block. Keep buyerCancels and the super.cancel site. Drop RefundService receivers and the VipOrderService override call vipCancels."
+    }
+  ],
+  "baseline": {
+    "files": [
+      "packages/order-ts/src/services/order-service.ts",
+      "packages/order-ts/src/services/refund-service.ts",
+      "packages/order-ts/src/services/vip-order-service.ts",
+      "packages/order-ts/src/app/checkout.ts",
+      "packages/order-ts/src/app/refund-desk.ts",
+      "packages/order-ts/src/app/vip-desk.ts"
+    ]
+  },
+  "expected": {
+    "symbol_ids": ["packages/order-ts/src/services/order-service.ts#OrderService.cancel"],
+    "must_exclude_symbols": ["RefundService.cancel"],
+    "snippets": ["super.cancel"],
+    "callers_include": ["buyerCancels"],
+    "callers_include_any": ["super.cancel", "vip-order-service.ts"],
+    "callers_exclude": ["buyerWithdrawsRefund", "vipCancels", "RefundService.cancel"]
+  }
+}

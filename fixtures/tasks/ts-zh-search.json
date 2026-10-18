@@ -1,0 +1,54 @@
+{
+  "id": "ts-zh-search",
+  "package": "order-ts",
+  "title": "Chinese and pinyin search finds pay and timeout handlers",
+  "metric_focus": ["correctness"],
+  "tool": "gf_read",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow read -q \"订单超时\"",
+      "mcp": { "tool": "gf_read", "arguments": { "q": "订单超时" } },
+      "expect": "Hit handleDingDanChaoShi and OrderService.timeout."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow read -q \"dingdan zhifu\"",
+      "mcp": { "tool": "gf_read", "arguments": { "q": "dingdan zhifu" } },
+      "expect": "Hit the pinyin identifier handleDingDanZhiFu. A literal ripgrep for this spaced query does not."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow read -q \"支付订单\"",
+      "mcp": { "tool": "gf_read", "arguments": { "q": "支付订单" } },
+      "expect": "Hit handleDingDanZhiFu and OrderService.pay."
+    }
+  ],
+  "baseline": {
+    "files": [
+      "packages/order-ts/src/services/order-service.ts",
+      "packages/order-ts/src/handlers/pay-handler.ts",
+      "packages/order-ts/src/handlers/timeout-handler.ts"
+    ],
+    "search": {
+      "query": "dingdan zhifu",
+      "paths": ["packages/order-ts/src"]
+    }
+  },
+  "expected": {
+    "hits": [
+      {
+        "q": "订单超时",
+        "symbol_ids": ["handleDingDanChaoShi", "OrderService.timeout"]
+      },
+      {
+        "q": "dingdan zhifu",
+        "symbol_ids": ["handleDingDanZhiFu"]
+      },
+      {
+        "q": "支付订单",
+        "symbol_ids": ["handleDingDanZhiFu", "OrderService.pay"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "cross-doc-link",
+  "package": "order-ts",
+  "title": "Timeout doc links to the symbols it names",
+  "metric_focus": ["correctness"],
+  "tool": "gf_macro",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow graph",
+      "mcp": { "tool": "gf_macro", "arguments": { "action": "visualize" } },
+      "expect": "Inspect doc-links-code for docs/订单超时.md. Keep the three named symbols in 关单路径. Drop concept-only mentions of 取消 and 退款."
+    }
+  ],
+  "baseline": {
+    "files": ["packages/order-ts/docs/订单超时.md", "packages/order-ts/src/handlers/timeout-handler.ts"]
+  },
+  "expected": {
+    "doc_must_link": ["handleDingDanChaoShi", "OrderService.timeout", "TIMEOUT_WINDOW_MS"],
+    "doc_must_not_link": [
+      "OrderService.cancel",
+      "OrderService.pay",
+      "RefundService.cancel",
+      "handleDingDanZhiFu",
+      "StockItem",
+      "Device.read"
+    ],
+    "max_doc_links": 3
+  }
+}

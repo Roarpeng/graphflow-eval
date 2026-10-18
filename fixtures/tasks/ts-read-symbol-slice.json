@@ -1,0 +1,29 @@
+{
+  "id": "ts-read-symbol-slice",
+  "package": "order-ts",
+  "title": "Slice OrderService.cancel instead of reading the whole service file",
+  "metric_focus": ["tokens", "correctness"],
+  "tool": "gf_read",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow read packages/order-ts/src/services/order-service.ts#OrderService.cancel",
+      "mcp": {
+        "tool": "gf_read",
+        "arguments": {
+          "targets": ["packages/order-ts/src/services/order-service.ts#OrderService.cancel"]
+        }
+      },
+      "expect": "Return the cancel method body and the Order type it closes over. Record tokens against the whole file."
+    }
+  ],
+  "baseline": {
+    "files": ["packages/order-ts/src/services/order-service.ts"]
+  },
+  "expected": {
+    "symbol_ids": ["packages/order-ts/src/services/order-service.ts#OrderService.cancel"],
+    "snippets": ["cancel(order: Order, reason: string)"],
+    "must_exclude_symbols": ["RefundService.cancel"],
+    "min_token_savings_ratio": 0.4
+  }
+}

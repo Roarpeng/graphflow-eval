@@ -1,0 +1,61 @@
+{
+  "id": "py-super-blast",
+  "package": "billing-py",
+  "title": "Python blast and rename follow super() and ignore the override receiver",
+  "metric_focus": ["safety", "correctness"],
+  "tool": "gf_edit",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow read packages/billing-py/billing/refund.py#RefundPolicy.refund",
+      "mcp": {
+        "tool": "gf_read",
+        "arguments": {
+          "targets": ["packages/billing-py/billing/refund.py#RefundPolicy.refund"]
+        }
+      },
+      "expect": "Include settle_full and super().refund. Exclude settle_partial."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow edit packages/billing-py/billing/refund.py --symbol RefundPolicy.refund --rename refundInvoice",
+      "mcp": {
+        "tool": "gf_edit",
+        "arguments": {
+          "file": "packages/billing-py/billing/refund.py",
+          "symbol": "RefundPolicy.refund",
+          "renameTo": "refundInvoice"
+        }
+      },
+      "expect": "Rename the base method and super().refund. Leave PartialRefundPolicy.refund in place. Run the billing tests on a throwaway worktree, then restore the tree."
+    },
+    {
+      "kind": "cli",
+      "command": "python3 -m unittest discover -s packages/billing-py/tests -t packages/billing-py",
+      "expect": "Tests pass after the rename."
+    }
+  ],
+  "baseline": {
+    "files": ["packages/billing-py/billing/refund.py", "packages/billing-py/billing/partial.py"]
+  },
+  "expected": {
+    "symbol_ids": ["packages/billing-py/billing/refund.py#RefundPolicy.refund"],
+    "snippets": ["super().refund"],
+    "callers_include": ["settle_full"],
+    "callers_exclude": ["settle_partial"],
+    "renamed_to": "refundInvoice",
+    "unchanged_symbols": ["PartialRefundPolicy.refund"],
+    "must_edit_files": [
+      "packages/billing-py/billing/refund.py",
+      "packages/billing-py/billing/partial.py",
+      "packages/billing-py/billing/settle_full.py"
+    ],
+    "must_not_edit_files": [
+      "packages/billing-py/billing/settle_partial.py",
+      "packages/billing-py/tests/test_refund.py",
+      "packages/billing-py/tests/test_invoice.py",
+      "packages/billing-py/tests/test_tax.py"
+    ],
+    "tests_green": true
+  }
+}

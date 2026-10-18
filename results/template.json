@@ -1,0 +1,48 @@
+{
+  "run_id": "",
+  "created_at": "",
+  "graphflow": {
+    "version": "",
+    "invoked": false,
+    "mode": ""
+  },
+  "estimation": {
+    "method": "ceil(chars/4)",
+    "note": "tokens = ceil(character length / 4). Fill tokens_graphflow from GraphFlow stdout or the slice you kept."
+  },
+  "tasks": [
+    {
+      "id": "",
+      "package": "",
+      "tool": "",
+      "metrics": {
+        "tokens_baseline": null,
+        "tokens_graphflow": null,
+        "token_savings_ratio": null,
+        "naive_search_hits": null
+      },
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "rejected": [],
+        "edited_files": [],
+        "edited_symbols": [],
+        "unchanged_symbols": [],
+        "affected_tests": [],
+        "hits": [],
+        "fields": [],
+        "methods": [],
+        "parent_class": {},
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "renamed_to": null,
+        "tests_green": null,
+        "raw_output": ""
+      },
+      "notes": ""
+    }
+  ]
+}

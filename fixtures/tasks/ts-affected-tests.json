@@ -1,0 +1,37 @@
+{
+  "id": "ts-affected-tests",
+  "package": "order-ts",
+  "title": "Affected tests for an @order/* module stay on the pay handler",
+  "metric_focus": ["correctness"],
+  "tool": "gf_exec",
+  "steps": [
+    {
+      "kind": "mcp",
+      "command": "graphflow exec affected-tests",
+      "mcp": {
+        "tool": "gf_exec",
+        "arguments": {
+          "cmd": "affected-tests",
+          "changedFiles": ["packages/order-ts/src/handlers/pay-handler.ts"],
+          "run": false
+        }
+      },
+      "expect": "List only __tests__/pay-handler.test.ts. The CLI without changedFiles reads git status, so either pass changedFiles via MCP or leave just that file dirty."
+    }
+  ],
+  "baseline": {
+    "files": ["packages/order-ts/src/handlers/pay-handler.ts", "packages/order-ts/__tests__/pay-handler.test.ts"]
+  },
+  "expected": {
+    "affected_tests": ["packages/order-ts/__tests__/pay-handler.test.ts"],
+    "unaffected_tests": [
+      "packages/order-ts/__tests__/order-service.test.ts",
+      "packages/order-ts/__tests__/refund-service.test.ts",
+      "packages/order-ts/__tests__/vip-order-service.test.ts",
+      "packages/order-ts/__tests__/timeout-handler.test.ts",
+      "packages/order-ts/__tests__/checkout.test.ts",
+      "packages/order-ts/__tests__/refund-desk.test.ts",
+      "packages/order-ts/__tests__/vip-desk.test.ts"
+    ]
+  }
+}

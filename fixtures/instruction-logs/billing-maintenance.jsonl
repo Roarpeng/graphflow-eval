@@ -1,0 +1,2 @@
+{"instruction":"format lint and test billing","steps":[{"cmd":"python -m compileall -q billing","cwd":"packages/billing-py"},{"cmd":"python -m unittest discover -s tests","cwd":"packages/billing-py"}],"at":"2026-10-18T00:00:00.000Z"}
+{"instruction":"format lint and test billing","steps":[{"cmd":"python -m compileall -q billing","cwd":"packages/billing-py"},{"cmd":"python -m unittest discover -s tests","cwd":"packages/billing-py"}],"at":"2026-10-18T00:05:00.000Z"}

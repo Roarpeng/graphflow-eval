@@ -1,0 +1,22 @@
+{
+  "name": "graphflow-eval",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fixture monorepo for evaluating GraphFlow 3.x Token-First tools against a naive whole-file and ripgrep baseline.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test scripts/score.test.mjs",
+    "test:order": "npm test --prefix packages/order-ts",
+    "test:billing": "python3 -m unittest discover -s packages/billing-py/tests -t packages/billing-py",
+    "test:inventory": "go test -C packages/inventory-go ./...",
+    "test:device": "cargo test --manifest-path packages/device-rs/Cargo.toml",
+    "test:fixtures": "npm run test:order && npm run test:billing && npm run test:inventory && npm run test:device",
+    "tasks": "node scripts/run-tasks.mjs",
+    "score": "node scripts/score.mjs",
+    "score:example": "node scripts/score.mjs --example"
+  }
+}

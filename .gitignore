@@ -1,0 +1,12 @@
+node_modules/
+dist/
+target/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.graphflow/
+.graphflow-cache/
+results/latest.json
+results/tasks/
+.DS_Store

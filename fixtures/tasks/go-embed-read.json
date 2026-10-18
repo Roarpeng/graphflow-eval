@@ -1,0 +1,29 @@
+{
+  "id": "go-embed-read",
+  "package": "inventory-go",
+  "title": "Read embedded StockItem fields and promoted methods on Reservation",
+  "metric_focus": ["correctness"],
+  "tool": "gf_read",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow read packages/inventory-go/reservation.go#Reservation",
+      "mcp": {
+        "tool": "gf_read",
+        "arguments": {
+          "targets": ["packages/inventory-go/reservation.go#Reservation"]
+        }
+      },
+      "expect": "Show embedded StockItem fields SKU, OnHand, Reserved and promoted Available, plus Hold. Do not require a file-level import edge from reservation.go to stock.go."
+    }
+  ],
+  "baseline": {
+    "files": ["packages/inventory-go/reservation.go", "packages/inventory-go/stock.go"]
+  },
+  "expected": {
+    "symbol_ids": ["packages/inventory-go/reservation.go#Reservation"],
+    "fields": ["SKU", "OnHand", "Reserved", "ID", "Qty", "Buyer"],
+    "methods": ["Hold", "Available"],
+    "residual": "stock.go and reservation.go are the same Go package and have no import statements. A missing file-level imports edge is an expected residual, not a failure. Missing embedded fields or Available is a failure."
+  }
+}
