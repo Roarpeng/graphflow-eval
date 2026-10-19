@@ -128,7 +128,6 @@ test("a foreign-receiver edit fails the safety gate", () => {
             "packages/order-ts/src/services/vip-order-service.ts",
             "packages/order-ts/src/app/checkout.ts",
             "packages/order-ts/__tests__/order-service.test.ts",
-            "packages/order-ts/__tests__/checkout.test.ts",
             "packages/order-ts/src/services/refund-service.ts",
           ],
           false_positives: ["RefundService.cancel"],

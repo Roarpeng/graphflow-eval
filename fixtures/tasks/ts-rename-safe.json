@@ -34,8 +34,7 @@
       "packages/order-ts/src/services/order-service.ts",
       "packages/order-ts/src/services/vip-order-service.ts",
       "packages/order-ts/src/app/checkout.ts",
-      "packages/order-ts/__tests__/order-service.test.ts",
-      "packages/order-ts/__tests__/checkout.test.ts"
+      "packages/order-ts/__tests__/order-service.test.ts"
     ],
     "must_not_edit_files": [
       "packages/order-ts/src/services/refund-service.ts",

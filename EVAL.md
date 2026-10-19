@@ -84,7 +84,8 @@ graphflow edit packages/order-ts/src/services/order-service.ts \
   --symbol OrderService.cancel --rename cancelOrder
 ```
 
-- Edit: `order-service.ts`, `vip-order-service.ts` (`super.cancel` → `super.cancelOrder`), `checkout.ts`, `order-service.test.ts`, `checkout.test.ts`
+- Edit: `order-service.ts`, `vip-order-service.ts` (`super.cancel` → `super.cancelOrder`; the override declaration stays), `checkout.ts`, `order-service.test.ts`
+- Do not require an edit of `__tests__/checkout.test.ts`. That file has no standalone `cancel` identifier (`cancels`, `cancelled`, `cancelReason` only). Rewriting `cancelReason` would turn the package tests red.
 - Leave untouched: `RefundService.cancel`, `VipOrderService.cancel` (the override declaration), refund desk, vip desk, and their tests
 - `tests_green: true` via `npm test --prefix packages/order-ts`
 - Any path in `false_positives`, or an edit under `must_not_edit_files`, fails the safety gate

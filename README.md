@@ -4,6 +4,47 @@
 
 English: a fixture monorepo so a person or an agent can measure GraphFlow against that naive baseline. The packages build and test on their own. GraphFlow is optional and is never imported by `npm test`.
 
+## Results / 实测
+
+Token method for every row is `ceil(chars/4)`. Pass/fail is `scripts/score.mjs` against `fixtures/tasks`. Numbers below are measurements, not a forecast.
+
+### GraphFlow 3.6.1 on this repo
+
+`node scripts/score.mjs results/run-3.6.1.json` after the `ts-rename-safe` rubric fix (see below): **6 pass / 10**, safety gate fail. The scorer prints mean token savings **−0.368** (the unrounded mean of the ten ratios is −0.3678). Artifact: `results/run-3.6.1.md` (that file still lists the old `checkout.test.ts` check; the re-score does not). The reflex suite is separate: `results/run-3.6.1-reflex.md`, **5/5**, safety gate pass, **750 → 252** tokens over 3 replays (savings 0.664).
+
+| Task | 3.6.1 tokens | Savings | Result |
+| --- | --- | ---: | --- |
+| ts-read-symbol-slice | 938 → 552 | 0.4115 | pass |
+| ts-blast-disambiguate | 1573 → 552 | 0.6491 | pass |
+| ts-rename-safe | 938 → 158 | 0.8316 | fail |
+| ts-zh-search | 1245 → 5872 | −3.7165 | pass |
+| ts-affected-tests | 304 → 33 | 0.8914 | pass |
+| py-super-blast | 218 → 674 | −2.0917 | fail |
+| py-task-harvest-doc | 117 → 166 | −0.4188 | pass |
+| go-embed-read | 415 → 931 | −1.2434 | pass |
+| rs-trait-dispatch | 523 → 450 | 0.1396 | fail |
+| cross-doc-link | 237 → 31 | 0.8692 | fail |
+
+Failures, from the recorded commands:
+
+- `ts-rename-safe`: `graphflow edit --symbol OrderService.cancel` returned `ERR [symbol-not-found]`. Retry `--symbol cancel` returned `REJECTED [ambiguous-symbol]` because `vip-order-service.ts` also declares `cancel`. Zero files changed, so `tests_green` stayed false. Re-scoring with the fixed rubric still fails those checks. It no longer also demands an edit of `checkout.test.ts`.
+- `py-super-blast`: same pair for `RefundPolicy.refund` / bare `refund` (`symbol-not-found`, then `ambiguous-symbol` on `partial.py`). The pre-rename read did include `super().refund` and `settle_full`.
+- `rs-trait-dispatch`: `Device.read` blast listed `poll_reading` (`&dyn Device`) only. `describe` (`impl Device`) was absent.
+- `cross-doc-link`: `docs/订单超时.md` linked `handleDingDanChaoShi`, `OrderService`, and `OrderService.timeout`, plus `业务背景 -> RefundTests.setUp`. `TIMEOUT_WINDOW_MS` was missing. Four links exceeded the cap of 3.
+
+### GraphFlow 3.6.2 and 3.7.0, measured on these fixtures elsewhere
+
+These runs were executed by GraphFlow pull requests against a local checkout of this harness. The run JSON was not committed here, so this README does not re-score them.
+
+- [GraphFlow PR #65](https://github.com/Roarpeng/GraphFlow/pull/65) (3.6.2): **9/10**, mean savings **+0.281**, before this rubric fix. The PR says the only failed check was `edited:packages/order-ts/__tests__/checkout.test.ts`, while `order-service.ts`, `vip-order-service.ts` (`super.cancelOrder`), `checkout.ts`, and `order-service.test.ts` were edited and `npm test --prefix packages/order-ts` stayed green. That artifact is not in this repo. After the rubric fix, that one check no longer exists, and a new pass count was **not** measured here.
+- [GraphFlow PR #66](https://github.com/Roarpeng/GraphFlow/pull/66) (3.7.0, stacked on that 3.6.2 branch): held-out Chinese recall **P@1 0.813** (L1+L2, 80 phrasings absent from the L0 glossary). `ts-zh-search` on this fixture went from **3198** tokens (3.6.2, savings −1.569 vs the 1245-token files) to **1077** (savings **0.135**). Required hits stayed correct.
+
+### Gaps that stay true
+
+- A GraphFlow slice of a small file can be larger than reading the file. The 3.6.1 mean is negative for that reason (`ts-zh-search` 1245 → 5872, `go-embed-read` 415 → 931, `py-super-blast` 218 → 674).
+- Task harvest still needs something that appends `.graphflow/instruction-log.jsonl`. The 3.6.1 reflex run called `graphflow task log` itself. There is no daemon inside this harness. PR #65 adds an install hook and a `gf_exec` `run: true` harvest path; this repo has not re-run that hook.
+- The L3 Chinese model is not bundled. PR #66 keeps `registerZhEnModel` behind `GRAPHFLOW_ZH_EN_MODEL=1` and does not ship opus-mt.
+
 ## Layout
 
 ```
