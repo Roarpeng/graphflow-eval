@@ -8,9 +8,13 @@ English: a fixture monorepo so a person or an agent can measure GraphFlow agains
 
 Token method for every row is `ceil(chars/4)`. Pass/fail is `scripts/score.mjs` against `fixtures/tasks`. Numbers below are measurements, not a forecast.
 
+`results/run-3.6.1.json` is the only full run committed before 3.7.0. There is no `results/run-3.6.2.json`.
+
 ### GraphFlow 3.6.1 on this repo
 
 `node scripts/score.mjs results/run-3.6.1.json` after the `ts-rename-safe` rubric fix (see below): **6 pass / 10**, safety gate fail. The scorer prints mean token savings **−0.368** (the unrounded mean of the ten ratios is −0.3678). Artifact: `results/run-3.6.1.md` (that file still lists the old `checkout.test.ts` check; the re-score does not). The reflex suite is separate: `results/run-3.6.1-reflex.md`, **5/5**, safety gate pass, **750 → 252** tokens over 3 replays (savings 0.664).
+
+`ts-rename-safe` `tests_green: false` in that JSON was hand-filled. The rename did not edit any file (`symbol-not-found`, then `ambiguous-symbol`), so there was no post-edit test of the rename. The raw vitest log in the same record is `Tests  16 passed (16)`.
 
 | Task | 3.6.1 tokens | Savings | Result |
 | --- | --- | ---: | --- |
@@ -27,17 +31,47 @@ Token method for every row is `ceil(chars/4)`. Pass/fail is `scripts/score.mjs` 
 
 Failures, from the recorded commands:
 
-- `ts-rename-safe`: `graphflow edit --symbol OrderService.cancel` returned `ERR [symbol-not-found]`. Retry `--symbol cancel` returned `REJECTED [ambiguous-symbol]` because `vip-order-service.ts` also declares `cancel`. Zero files changed, so `tests_green` stayed false. Re-scoring with the fixed rubric still fails those checks. It no longer also demands an edit of `checkout.test.ts`.
+- `ts-rename-safe`: `graphflow edit --symbol OrderService.cancel` returned `ERR [symbol-not-found]`. Retry `--symbol cancel` returned `REJECTED [ambiguous-symbol]` because `vip-order-service.ts` also declares `cancel`. Zero files changed. `tests_green: false` was written by hand; the raw log is 16 passed. Re-scoring with the fixed rubric still fails the rename checks. It no longer also demands an edit of `checkout.test.ts`.
 - `py-super-blast`: same pair for `RefundPolicy.refund` / bare `refund` (`symbol-not-found`, then `ambiguous-symbol` on `partial.py`). The pre-rename read did include `super().refund` and `settle_full`.
 - `rs-trait-dispatch`: `Device.read` blast listed `poll_reading` (`&dyn Device`) only. `describe` (`impl Device`) was absent.
 - `cross-doc-link`: `docs/订单超时.md` linked `handleDingDanChaoShi`, `OrderService`, and `OrderService.timeout`, plus `业务背景 -> RefundTests.setUp`. `TIMEOUT_WINDOW_MS` was missing. Four links exceeded the cap of 3.
 
-### GraphFlow 3.6.2 and 3.7.0, measured on these fixtures elsewhere
+### GraphFlow 3.6.2, hand-filled, no run file here
 
-These runs were executed by GraphFlow pull requests against a local checkout of this harness. The run JSON was not committed here, so this README does not re-score them.
+[GraphFlow PR #65](https://github.com/Roarpeng/GraphFlow/pull/65) (3.6.2) reports **9/10**, mean savings **+0.281**, before the `checkout.test.ts` rubric fix. Those `observed` fields were filled by hand. This repo never committed a `run-3.6.2` JSON, and this checkout did not re-run 3.6.2. The PR says the only failed check was `edited:packages/order-ts/__tests__/checkout.test.ts`, while `order-service.ts`, `vip-order-service.ts` (`super.cancelOrder`), `checkout.ts`, and `order-service.test.ts` were edited and `npm test --prefix packages/order-ts` stayed green. After the rubric fix that check no longer exists. A new 3.6.2 pass count was **not** measured here (未在本仓库重跑).
 
-- [GraphFlow PR #65](https://github.com/Roarpeng/GraphFlow/pull/65) (3.6.2): **9/10**, mean savings **+0.281**, before this rubric fix. The PR says the only failed check was `edited:packages/order-ts/__tests__/checkout.test.ts`, while `order-service.ts`, `vip-order-service.ts` (`super.cancelOrder`), `checkout.ts`, and `order-service.test.ts` were edited and `npm test --prefix packages/order-ts` stayed green. That artifact is not in this repo. After the rubric fix, that one check no longer exists, and a new pass count was **not** measured here.
-- [GraphFlow PR #66](https://github.com/Roarpeng/GraphFlow/pull/66) (3.7.0, stacked on that 3.6.2 branch): held-out Chinese recall **P@1 0.813** (L1+L2, 80 phrasings absent from the L0 glossary). `ts-zh-search` on this fixture went from **3198** tokens (3.6.2, savings −1.569 vs the 1245-token files) to **1077** (savings **0.135**). Required hits stayed correct.
+### GraphFlow 3.7.0, this repo, `--execute`
+
+`results/run-3.7.0.json` and `results/run-3.7.0.md` are the run against GraphFlow `main` `b21c027` (CLI prints `3.7.0`; the npm package `3.7.0` was not published, so the binary is that source build). `node scripts/score.mjs results/run-3.7.0.json`:
+
+**0 pass / 15 fail**, safety gate fail, mean token savings **0.409** (ten original tasks; reflex ratios are null).
+
+| Task | 3.7.0 tokens | Savings | Scorer |
+| --- | --- | ---: | --- |
+| ts-read-symbol-slice | 938 → 559 | 0.4041 | fail (`symbol_ids` 未提取) |
+| ts-blast-disambiguate | 1592 → 559 | 0.6489 | fail (callers 未提取) |
+| ts-rename-safe | 938 → 127 | 0.8646 | fail (TS4113, two must-edit files missing) |
+| ts-zh-search | 1245 → 1077 | 0.1349 | fail (`hits` 未提取) |
+| ts-affected-tests | 304 → 19 | 0.9375 | fail (clean tree; MCP `changedFiles` 未实际执行) |
+| py-super-blast | 218 → 243 | −0.1147 | fail (`symbol_ids` / callers 未提取) |
+| py-task-harvest-doc | 117 → 166 | −0.4188 | fail (reflect exit 1, `python` missing; `harvest` 未提取) |
+| go-embed-read | 415 → 354 | 0.147 | fail (fields 未提取) |
+| rs-trait-dispatch | 523 → 191 | 0.6348 | fail (callers 未提取) |
+| cross-doc-link | 237 → 34 | 0.8565 | fail (`graph` wrote HTML only; links 未提取) |
+
+`ts-rename-safe` is a product failure the runner recorded, not an empty field. Rename stdout: `OK [renamed 'cancel' -> 'cancelOrder'] 6 occurrence(s) across 4 file(s)`. Diff touched `order-service.ts`, `vip-order-service.ts` (the `super` call), `checkout.ts`, and `order-service.test.ts`. It did not touch `vip-desk.ts` or `vip-order-service.test.ts`. `RefundService.cancel` stayed. Typecheck exited 2:
+
+```
+src/services/vip-order-service.ts(13,12): error TS4113: This member cannot have an 'override' modifier because it is not declared in the base class 'OrderService'.
+```
+
+The override declaration stayed `cancel` after the base method became `cancelOrder`. `tests_green` is false because of that exit code. Vitest did not run.
+
+Other original-task CLI steps did run (exit 0 unless noted). The scorer still fails them because this runner does not copy `symbol_ids`, callers, hits, doc links, affected tests, or harvest out of stdout. Those checks are 未提取. Reflex `gf_macro` steps exited 127 and are 未实际执行. Detail is in `results/run-3.7.0.md`.
+
+[GraphFlow PR #66](https://github.com/Roarpeng/GraphFlow/pull/66) separately reported held-out Chinese recall **P@1 0.813** (L1+L2, n=80) and `ts-zh-search` **3198 → 1077**. This run's `ts-zh-search` stdout is also **1077** tokens (savings 0.1349). The P@1 figure was not re-measured here.
+
+A GraphFlow 3.7.1 override-chain fix was not on GitHub when this run was recorded (no open or merged PR after #66). Rerunning `ts-rename-safe` after that fix is 未实际执行.
 
 ### Gaps that stay true
 
@@ -141,7 +175,7 @@ Run the CLI steps when GraphFlow is installed:
 node scripts/run-tasks.mjs --execute --id ts-read-symbol-slice
 ```
 
-`--execute` stores stdout in `observed.raw_output` and estimates `tokens_graphflow` from that text. Copy symbol ids, callers, edited files, and test status into the `observed` fields before you treat the score as final. Snippet checks also read `raw_output`. Caller, safety, and doc-link checks use the structured fields.
+`--execute` runs every task in a temporary `git worktree` and deletes it afterwards. It fills `edited_files` from `git diff --name-only`, `renamed_to` from `OK [renamed 'x' -> 'y']`, `tests_green` from the test or typecheck step's exit code, and `unchanged_symbols` by checking that those declarations are still in the worktree. It stores stdout and stderr in `observed.raw_output` and estimates `tokens_graphflow` from stdout. It does not fill `symbol_ids`, `callers`, `snippets`, `hits`, `affected_tests`, `doc_links`, or `harvest`. Snippet checks also read `raw_output`. A score that fails those empty fields is 未提取, not a product verdict, until something copies them from `raw_output`.
 
 Score a filled artifact:
 
@@ -173,7 +207,7 @@ node scripts/score.mjs --example
 | `tests_green` | `true` only after the package tests pass on the edited tree |
 | `metrics.tokens_baseline` / `tokens_graphflow` | `ceil(chars/4)` estimates |
 
-Do rename tasks on a git worktree and restore the fixture names afterwards. The committed tests expect `OrderService.cancel` and `RefundPolicy.refund`.
+`--execute` already uses a throwaway worktree, so a rename does not change the checkout you commit from. The committed tests expect `OrderService.cancel` and `RefundPolicy.refund`.
 
 ### Token estimate
 
