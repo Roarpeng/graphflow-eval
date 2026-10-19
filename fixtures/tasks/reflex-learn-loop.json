@@ -1,0 +1,43 @@
+{
+  "id": "reflex-learn-loop",
+  "package": "billing-py",
+  "title": "External instruction log promotes a compiled runner, then harvests incrementally",
+  "metric_focus": ["correctness"],
+  "tool": "gf_macro",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\"",
+      "expect": "Appends one JSON line to .graphflow/instruction-log.jsonl. Does not harvest."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow task harvest --json",
+      "expect": "First harvest records one use and does not compile. A second identical log line then promotes tasks.json and .graphflow/tasks/<id>.mjs. A harvest with no new bytes reads 0 entries."
+    },
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-harvest",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": { "action": "task-harvest" }
+      },
+      "expect": "After one more appended line, MCP harvest reads only the new bytes and advances .graphflow/task-harvest.json."
+    }
+  ],
+  "baseline": {
+    "files": []
+  },
+  "expected": {
+    "harvest": "HIT",
+    "harvest_steps": [
+      "cd packages/billing-py && python3 -m compileall -q billing",
+      "cd packages/billing-py && python3 -m unittest discover -s tests -v"
+    ],
+    "learn": {
+      "min_log_lines": 3,
+      "idle_entries": 0,
+      "mcp_entries": 1
+    }
+  }
+}

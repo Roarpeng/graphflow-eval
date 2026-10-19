@@ -12,6 +12,7 @@ GraphFlow is the subject. `npm test` does not call it. A run is a JSON file shap
 | Correctness | Every required symbol, snippet, caller, hit, field, method, parent, doc link, affected test, or harvest step is present | A required id is missing |
 | Exclusions | Excluded symbols, callers, unaffected tests, and doc links are absent | A rejected name shows up in the kept set |
 | Safety | `renamed_to` matches, `unchanged_symbols` still name the foreign receivers, `must_not_edit_files` are absent from `edited_files`, `tests_green` is true, `false_positives` is empty | A foreign receiver was edited, or the package tests went red |
+| Reflex | Learn-loop promotion and byte offset, MCP `task-run` exit 0, Jaccard near-hit vs miss, and `{{arg1}}` substitution match `observed` | A required replay missed, an unrelated instruction hit, or the offset did not advance |
 | Skip | `graphflow.invoked` is false or `observed` is null | — |
 
 Safety tasks (`metric_focus` contains `safety`) are a gate. One safety fail makes `safety_gate` fail even if other tasks pass.
@@ -179,6 +180,50 @@ This task is read/blast. GraphFlow may still reject an atomic trait+impl rename;
 - Cap: at most 3 links from this doc
 
 `graphflow graph` writes `.graphflow/knowledge-graph.html`. Transcribe the kept `doc-links-code` edges into `observed.doc_links` as `section -> Symbol`.
+
+### 11. `reflex-learn-loop`
+
+看什么：外部写入者把同一条维护指令追加到 `.graphflow/instruction-log.jsonl`，CLI `task harvest` 在第二次提升并编译，MCP `task-harvest` 只吃新增字节。
+
+- Writer: `graphflow task log`（GraphFlow 自己不会挂钩宿主，评测脚本就是那个外部写入者）
+- Instruction: `format lint and test billing package before release`
+- Steps: `cd packages/billing-py && python3 -m compileall -q billing` and `python3 -m unittest discover -s tests -v`
+- First harvest records one use and does not compile
+- Second harvest promotes `.graphflow/tasks.json` and `.graphflow/tasks/<id>.mjs`
+- A harvest with no new bytes reports `entriesRead: 0`
+- One more log line, then MCP `gf_macro` `task-harvest`, reads 1 entry and moves the byte offset in `.graphflow/task-harvest.json` to the new file size
+
+### 12. `reflex-mcp-invoke`
+
+看什么：提升之后，MCP stdio 的 `gf_macro` `task-list` / `task-run` 真的执行本地 runner，退出码为 0。
+
+- Replay env: `python3` is on `PATH`. The runner also links `python` → `python3` so a step that says `python` can run. These steps call `python3`.
+- MCP result text contains `PASS [exit=0` and `local-runner`
+- CLI `graphflow reflect --json` reports `exitCode: 0` for the same instruction
+
+### 13. `reflex-near-threshold`
+
+看什么：token-Jaccard 0.86 附近，一条改写命中，一条差一点的改写和一条无关指令都是 MISS。
+
+| Query | Tokens vs the recorded key | Expected |
+| --- | --- | --- |
+| `... release quietly` | add `quietly` → 0.875 | HIT, `near match score=`, runner executes |
+| `format lint and test billing before release` | drop `package` → 0.857 | MISS, steps do not run |
+| `ship the warehouse reservation hold` | 0 | MISS, `hit: false`, CLI exit 1 |
+
+The MISS payload does not carry the score. The 0.857 / 0.000 figures come from GraphFlow's exported `jaccardSimilarity`. The 0.875 figure is parsed from the tool text. A HIT on the unrelated instruction is a false positive and fails the safety gate.
+
+### 14. `reflex-arg-record`
+
+看什么：显式 `task-record`（不是日志收割）第二次编译，`{{arg1}}` 留在 `.mjs` 里，MCP `task-run` 传入 `R3` 后输出 `PASS batch=R3`。
+
+The success dehydrator keeps lines that look like `PASS`. The recorded step is `echo PASS batch={{arg1}}` so the substituted value stays in the text the agent reads.
+
+### 15. `reflex-token-rounds`
+
+看什么：已经编译之后的 N=3 轮。基线是每轮「指令 + 计划的两条命令 + 命令的完整输出」。反射路径是一轮一次 `gf_macro` `task-run` 加上脱水结果。两边都用 `ceil(chars/4)`。节省比例至少 0.35。
+
+`node scripts/run-reflex.mjs` writes `results/run-3.6.1-reflex.json` and `.md`. It needs `GRAPHFLOW_BIN` (and `graphflow-mcp` beside it, or `GRAPHFLOW_MCP`).
 
 ## Expected outcome
 

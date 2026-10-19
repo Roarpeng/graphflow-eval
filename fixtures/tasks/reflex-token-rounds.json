@@ -1,0 +1,32 @@
+{
+  "id": "reflex-token-rounds",
+  "package": "billing-py",
+  "title": "Three reflex replays versus re-planning the same maintenance commands",
+  "metric_focus": ["tokens", "correctness"],
+  "tool": "gf_macro",
+  "steps": [
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-run \"format lint and test billing package before release\"",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-run",
+          "instruction": "format lint and test billing package before release"
+        }
+      },
+      "expect": "N=3. Baseline each round is the instruction plus both shell commands plus their full stdout. Reflex each round is one gf_macro tools/call plus the dehydrated result."
+    }
+  ],
+  "baseline": {
+    "files": [],
+    "rounds": 3,
+    "note": "Not a whole-file read. tokens_baseline sums N copies of instruction + planned commands + full command output."
+  },
+  "expected": {
+    "rounds": 3,
+    "exit_code": 0,
+    "min_token_savings_ratio": 0.35,
+    "snippets": ["PASS [exit=0"]
+  }
+}

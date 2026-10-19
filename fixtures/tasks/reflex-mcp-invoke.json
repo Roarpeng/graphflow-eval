@@ -1,0 +1,40 @@
+{
+  "id": "reflex-mcp-invoke",
+  "package": "billing-py",
+  "title": "MCP stdio task-list and task-run execute the promoted runner",
+  "metric_focus": ["correctness"],
+  "tool": "gf_macro",
+  "steps": [
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-list",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": { "action": "task-list" }
+      },
+      "expect": "stdio tools/call lists the promoted billing task."
+    },
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-run",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-run",
+          "instruction": "format lint and test billing package before release"
+        }
+      },
+      "expect": "The dehydrated result contains PASS [exit=0. CLI reflect --json reports the same exit code."
+    }
+  ],
+  "baseline": {
+    "files": []
+  },
+  "expected": {
+    "reflect": "HIT",
+    "exit_code": 0,
+    "cli_exit_code": 0,
+    "mcp_actions": ["task-list", "task-run"],
+    "snippets": ["PASS [exit=0", "local-runner"]
+  }
+}

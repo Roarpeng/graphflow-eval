@@ -23,6 +23,11 @@ test("task catalog has the required ids", () => {
     "go-embed-read",
     "py-super-blast",
     "py-task-harvest-doc",
+    "reflex-arg-record",
+    "reflex-learn-loop",
+    "reflex-mcp-invoke",
+    "reflex-near-threshold",
+    "reflex-token-rounds",
     "rs-trait-dispatch",
     "ts-affected-tests",
     "ts-blast-disambiguate",
@@ -205,4 +210,102 @@ test("normalized blast, search, embed, trait, doc, and harvest observations pass
   };
   const report = scoreRun(run, byId);
   assert.equal(report.status, "pass", JSON.stringify(report.tasks, null, 2));
+});
+
+test("reflex observations pass and a false near-hit fails the safety gate", () => {
+  const { byId } = loadTaskFiles();
+  const passing = {
+    graphflow: { invoked: true, mode: "cli+mcp-stdio", version: "3.6.1" },
+    tasks: [
+      {
+        id: "reflex-learn-loop",
+        metrics: {},
+        observed: {
+          harvest: "HIT",
+          steps: [
+            "cd packages/billing-py && python3 -m compileall -q billing",
+            "cd packages/billing-py && python3 -m unittest discover -s tests -v",
+          ],
+          learn: {
+            log_lines: 3,
+            promoted: true,
+            compiled: true,
+            script_path: ".graphflow/tasks/t_0123456789.mjs",
+            tasks_json: true,
+            first_compiled: false,
+            idle_entries: 0,
+            mcp_entries: 1,
+            offset_before_mcp: 100,
+            offset_after_mcp: 180,
+            log_bytes: 180,
+          },
+        },
+      },
+      {
+        id: "reflex-mcp-invoke",
+        metrics: {},
+        observed: {
+          reflect: "HIT",
+          exit_code: 0,
+          cli_exit_code: 0,
+          mcp_actions: ["task-list", "task-run"],
+          snippets: ["PASS [exit=0", "local-runner"],
+          raw_output: "PASS [exit=0, 12ms] OK\nlocal-runner",
+        },
+      },
+      {
+        id: "reflex-near-threshold",
+        metrics: {},
+        observed: {
+          near_hit: true,
+          near_score: 0.875,
+          below_miss: true,
+          unrelated_miss: true,
+          false_hit: false,
+          false_positives: [],
+          raw_output: "near match score=0.875\nMISS [no-reflected-task]",
+        },
+      },
+      {
+        id: "reflex-arg-record",
+        metrics: {},
+        observed: {
+          compiled: true,
+          exit_code: 0,
+          mcp_actions: ["task-record", "task-run"],
+          snippets: ["{{arg1}}", "not-compiled-yet"],
+          raw_output: "not-compiled-yet\n{{arg1}}\nPASS batch=R3",
+        },
+      },
+      {
+        id: "reflex-token-rounds",
+        metrics: { tokens_baseline: 900, tokens_graphflow: 300, token_savings_ratio: 0.6667, rounds: 3 },
+        observed: { exit_code: 0, raw_output: "PASS [exit=0, 4ms] OK" },
+      },
+    ],
+  };
+  const passReport = scoreRun(passing, byId);
+  assert.equal(passReport.status, "pass", JSON.stringify(passReport.tasks, null, 2));
+  assert.equal(passReport.safety_gate, "pass");
+
+  const missed = {
+    graphflow: { invoked: true, version: "3.6.1" },
+    tasks: [
+      {
+        id: "reflex-near-threshold",
+        metrics: {},
+        observed: {
+          near_hit: true,
+          near_score: 0.875,
+          below_miss: true,
+          unrelated_miss: false,
+          false_hit: true,
+          false_positives: ["ship the warehouse reservation hold"],
+        },
+      },
+    ],
+  };
+  const failReport = scoreRun(missed, byId);
+  assert.equal(failReport.status, "fail");
+  assert.equal(failReport.safety_gate, "fail");
 });

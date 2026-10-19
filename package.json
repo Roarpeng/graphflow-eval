@@ -16,6 +16,7 @@
     "test:device": "cargo test --manifest-path packages/device-rs/Cargo.toml",
     "test:fixtures": "npm run test:order && npm run test:billing && npm run test:inventory && npm run test:device",
     "tasks": "node scripts/run-tasks.mjs",
+    "reflex": "node scripts/run-reflex.mjs",
     "score": "node scripts/score.mjs",
     "score:example": "node scripts/score.mjs --example"
   }

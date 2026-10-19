@@ -1,0 +1,276 @@
+{
+  "run_id": "run-3.6.1-reflex",
+  "created_at": "2026-10-19T00:56:21.022Z",
+  "graphflow": {
+    "version": "3.6.1",
+    "invoked": true,
+    "mode": "cli+mcp-stdio",
+    "bin": "@roarpeng/graphflow@3.6.1"
+  },
+  "estimation": {
+    "method": "ceil(chars/4)",
+    "note": "Reflex tokens are one gf_macro tools/call plus the dehydrated tool text, summed over N rounds. Baseline tokens are the same N copies of the instruction, the planned shell commands, and the full stdout/stderr of those commands."
+  },
+  "workspace": "/tmp/gf-reflex-eval",
+  "python_shim": "3.12.3",
+  "mcp_tools": [
+    "gf_read",
+    "gf_edit",
+    "gf_exec",
+    "gf_macro"
+  ],
+  "mcp_server": {
+    "name": "graphflow",
+    "version": "3.6.1"
+  },
+  "probe_jaccard": {
+    "threshold": 0.86,
+    "hit": 0.875,
+    "miss": 0.8571428571428571,
+    "unrelated": 0
+  },
+  "gaps": [
+    "Auto-harvest still needs an external writer. This run called `graphflow task log` itself. GraphFlow 3.6.1 has no host hook or daemon that appends the instruction log.",
+    "A MISS payload does not include the Jaccard score. The 0.857 figure is GraphFlow's exported jaccardSimilarity on the same strings. The HIT score is parsed from the MCP text `near match score=`.",
+    "MCP task-run returns dehydrated text, not a JSON exitCode. Exit 0 is read from `PASS [exit=0`. CLI `reflect --json` is recorded beside it.",
+    "{{argN}} is written by hand into the recorded step. The reflector does not infer parameters.",
+    "Concurrent cross-process records (last writer wins) were not exercised."
+  ],
+  "tasks": [
+    {
+      "id": "reflex-learn-loop",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "commands": [
+        {
+          "command": "graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow task harvest --json --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow task harvest --json --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow task harvest --json --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-harvest\"}",
+          "exitCode": 0
+        }
+      ],
+      "metrics": {
+        "tokens_baseline": null,
+        "tokens_graphflow": 508,
+        "token_savings_ratio": null
+      },
+      "observed": {
+        "harvest": "HIT",
+        "steps": [
+          "cd packages/billing-py && python3 -m compileall -q billing",
+          "cd packages/billing-py && python3 -m unittest discover -s tests -v"
+        ],
+        "learn": {
+          "log_lines": 3,
+          "promoted": true,
+          "compiled": true,
+          "script_path": ".graphflow/tasks/t_ec82285a44.mjs",
+          "tasks_json": true,
+          "first_compiled": false,
+          "idle_entries": 0,
+          "mcp_entries": 1,
+          "offset_before_mcp": 484,
+          "offset_after_mcp": 726,
+          "log_bytes": 726,
+          "first_entries": 1,
+          "second_entries": 1,
+          "uses_after_mcp": 3
+        },
+        "false_positives": [],
+        "raw_output": "$ graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval\nexit 0\nOK [instruction-logged] at=2026-10-19T00:56:19.014Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n\n$ graphflow task harvest --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 1,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 1,\n  \"tasksPromoted\": []\n}\n\n\n$ graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval\nexit 0\nOK [instruction-logged] at=2026-10-19T00:56:19.282Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n\n$ graphflow task harvest --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 1,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 1,\n  \"tasksPromoted\": [\n    \"t_ec82285a44\"\n  ]\n}\n\n\n$ graphflow task harvest --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 0,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 0,\n  \"tasksPromoted\": []\n}\n\n\n$ graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval\nexit 0\nOK [instruction-logged] at=2026-10-19T00:56:19.685Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n\n$ MCP tools/call gf_macro {\"action\":\"task-harvest\"}\nexit 0\nPASS [task-harvest] log=.graphflow/instruction-log.jsonl entries=1 invalid=0 uses=1 promoted=t_ec82285a44\n\n# tasks.json\n{\n  \"version\": 1,\n  \"tasks\": [\n    {\n      \"id\": \"t_ec82285a44\",\n      \"instructionRaw\": \"format lint and test billing package before release\",\n      \"instructionKey\": \"format lint test bill packag befor releas\",\n      \"count\": 3,\n      \"steps\": [\n        \"cd packages/billing-py && python3 -m compileall -q billing\",\n        \"cd packages/billing-py && python3 -m unittest discover -s tests -v\"\n      ],\n      \"createdAt\": \"2026-10-19T00:56:19.149Z\",\n      \"lastUsedAt\": \"2026-10-19T00:56:19.695Z\",\n      \"scriptPath\": \".graphflow/tasks/t_ec82285a44.mjs\"\n    }\n  ]\n}\n\n# runner excerpt\n#!/usr/bin/env node\n// Generated by GraphFlow task-reflector — deterministic local task runner.\n// Do not edit by hand: edit .graphflow/tasks.json and re-record the instruction.\nimport { spawnSync } from \"node:child_process\";\nimport { dirname, resolve, sep } from \"node:path\";\nimport { fileURLToPath } from \"node:url\";\n\nconst ROOT = resolve(dirname(fileURLToPath(import.meta.url)), \"..\", \"..\");\nconst STEPS = [{\"cmd\":\"cd packages/billing-py && python3 -m compileall -q billing\"},{\"cmd\":\"cd packages/billing-py && python3 -m unittest discover -s tests -v\"}];\nconst ARGS = process.argv.slice(2);\nconst TIMEOUT_MS = 120000;\n\nfunction substitute(value) {\n  return value.replace(/\\{\\{args\\}\\}/g, ARGS.join(\" \")).replace(/\\{\\{arg(\\d+)\\}\\}/g, (_match, index) => ARGS[Number(index) - 1] ?? \"\");\n}\n\nfunction w"
+      },
+      "evidence": "$ graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval\nexit 0\nOK [instruction-logged] at=2026-10-19T00:56:19.014Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n\n$ graphflow task harvest --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 1,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 1,\n  \"tasksPromoted\": []\n}\n\n\n$ graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval\nexit 0\nOK [instruction-logged] at=2026-10-19T00:56:19.282Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n\n$ graphflow task harvest --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 1,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 1,\n  \"tasksPromoted\": [\n    \"t_ec82285a44\"\n  ]\n}\n\n\n$ graphflow task harvest --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 0,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 0,\n  \"tasksPromoted\": []\n}\n\n\n$ graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\" --root /tmp/gf-reflex-eval\nexit 0\nOK [instruction-logged] at=2026-10-19T00:56:19.685Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n\n$ MCP tools/call gf_macro {\"action\":\"task-harvest\"}\nexit 0\nPASS [task-harvest] log=.graphflow/instruction-log.jsonl entries=1 invalid=0 uses=1 promoted=t_ec82285a44"
+    },
+    {
+      "id": "reflex-mcp-invoke",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "commands": [
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-list\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow reflect \"format lint and test billing package before release\" --json --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        }
+      ],
+      "metrics": {
+        "tokens_baseline": null,
+        "tokens_graphflow": 247,
+        "token_savings_ratio": null
+      },
+      "observed": {
+        "reflect": "HIT",
+        "exit_code": 0,
+        "cli_exit_code": 0,
+        "mcp_actions": [
+          "task-list",
+          "task-run"
+        ],
+        "snippets": [
+          "PASS [exit=0",
+          "local-runner"
+        ],
+        "false_positives": [],
+        "raw_output": "$ MCP tools/call gf_macro {\"action\":\"task-list\"}\nexit 0\n# Reflected Tasks (1):\n- t_ec82285a44 [uses=3, compiled]: format lint and test billing package before release\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=4, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 105ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ graphflow reflect \"format lint and test billing package before release\" --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"hit\": true,\n  \"text\": \"# Reflected Task t_ec82285a44 [uses=5, local-runner] exact normalized match\\nInstruction: format lint and test billing package before release\\n\\nPASS [exit=0, 104ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\",\n  \"exitCode\": 0,\n  \"durationMs\": 104,\n  \"taskId\": \"t_ec82285a44\",\n  \"matchedBy\": \"exact\",\n  \"score\": 1\n}\n"
+      },
+      "evidence": "$ MCP tools/call gf_macro {\"action\":\"task-list\"}\nexit 0\n# Reflected Tasks (1):\n- t_ec82285a44 [uses=3, compiled]: format lint and test billing package before release\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=4, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 105ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ graphflow reflect \"format lint and test billing package before release\" --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"hit\": true,\n  \"text\": \"# Reflected Task t_ec82285a44 [uses=5, local-runner] exact normalized match\\nInstruction: format lint and test billing package before release\\n\\nPASS [exit=0, 104ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\",\n  \"exitCode\": 0,\n  \"durationMs\": 104,\n  \"taskId\": \"t_ec82285a44\",\n  \"matchedBy\": \"exact\",\n  \"score\": 1\n}\n"
+    },
+    {
+      "id": "reflex-near-threshold",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "commands": [
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release quietly\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing before release\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"ship the warehouse reservation hold\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow reflect \"format lint and test billing before release\" --json --root /tmp/gf-reflex-eval",
+          "exitCode": 1
+        },
+        {
+          "command": "graphflow reflect \"ship the warehouse reservation hold\" --json --root /tmp/gf-reflex-eval",
+          "exitCode": 1
+        }
+      ],
+      "metrics": {
+        "tokens_baseline": null,
+        "tokens_graphflow": null,
+        "token_savings_ratio": null,
+        "near_score": 0.875,
+        "probe_hit": 0.875,
+        "probe_miss": 0.8571428571428571,
+        "probe_unrelated": 0
+      },
+      "observed": {
+        "near_hit": true,
+        "near_score": 0.875,
+        "below_miss": true,
+        "unrelated_miss": true,
+        "false_hit": false,
+        "false_positives": [],
+        "snippets": [
+          "near match score=",
+          "MISS [no-reflected-task]"
+        ],
+        "raw_output": "$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release quietly\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=6, local-runner] near match score=0.875\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 98ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing before release\"}\nexit 0\nMISS [no-reflected-task] No reflected task matched \"format lint and test billing before release\".\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\n  graphflow task record \"<instruction>\" --step \"<cmd>\"\nor MCP gf_macro({ action: \"task-record\", instruction, steps: [\"<cmd>\"] }).\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"ship the warehouse reservation hold\"}\nexit 0\nMISS [no-reflected-task] No reflected task matched \"ship the warehouse reservation hold\".\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\n  graphflow task record \"<instruction>\" --step \"<cmd>\"\nor MCP gf_macro({ action: \"task-record\", instruction, steps: [\"<cmd>\"] }).\n\n$ graphflow reflect \"format lint and test billing before release\" --json --root /tmp/gf-reflex-eval\nexit 1\n{\n  \"hit\": false,\n  \"text\": \"MISS [no-reflected-task] No reflected task matched \\\"format lint and test billing before release\\\".\\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\\n  graphflow task record \\\"<instruction>\\\" --step \\\"<cmd>\\\"\\nor MCP gf_macro({ action: \\\"task-record\\\", instruction, steps: [\\\"<cmd>\\\"] }).\",\n  \"exitCode\": 1,\n  \"durationMs\": 2\n}\n\n\n$ graphflow reflect \"ship the warehouse reservation hold\" --json --root /tmp/gf-reflex-eval\nexit 1\n{\n  \"hit\": false,\n  \"text\": \"MISS [no-reflected-task] No reflected task matched \\\"ship the warehouse reservation hold\\\".\\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\\n  graphflow task record \\\"<instruction>\\\" --step \\\"<cmd>\\\"\\nor MCP gf_macro({ action: \\\"task-record\\\", instruction, steps: [\\\"<cmd>\\\"] }).\",\n  \"exitCode\": 1,\n  \"durationMs\": 2\n}\n"
+      },
+      "evidence": "$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release quietly\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=6, local-runner] near match score=0.875\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 98ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing before release\"}\nexit 0\nMISS [no-reflected-task] No reflected task matched \"format lint and test billing before release\".\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\n  graphflow task record \"<instruction>\" --step \"<cmd>\"\nor MCP gf_macro({ action: \"task-record\", instruction, steps: [\"<cmd>\"] }).\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"ship the warehouse reservation hold\"}\nexit 0\nMISS [no-reflected-task] No reflected task matched \"ship the warehouse reservation hold\".\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\n  graphflow task record \"<instruction>\" --step \"<cmd>\"\nor MCP gf_macro({ action: \"task-record\", instruction, steps: [\"<cmd>\"] }).\n\n$ graphflow reflect \"format lint and test billing before release\" --json --root /tmp/gf-reflex-eval\nexit 1\n{\n  \"hit\": false,\n  \"text\": \"MISS [no-reflected-task] No reflected task matched \\\"format lint and test billing before release\\\".\\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\\n  graphflow task record \\\"<instruction>\\\" --step \\\"<cmd>\\\"\\nor MCP gf_macro({ action: \\\"task-record\\\", instruction, steps: [\\\"<cmd>\\\"] }).\",\n  \"exitCode\": 1,\n  \"durationMs\": 2\n}\n\n\n$ graphflow reflect \"ship the warehouse reservation hold\" --json --root /tmp/gf-reflex-eval\nexit 1\n{\n  \"hit\": false,\n  \"text\": \"MISS [no-reflected-task] No reflected task matched \\\"ship the warehouse reservation hold\\\".\\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\\n  graphflow task record \\\"<instruction>\\\" --step \\\"<cmd>\\\"\\nor MCP gf_macro({ action: \\\"task-record\\\", instruction, steps: [\\\"<cmd>\\\"] }).\",\n  \"exitCode\": 1,\n  \"durationMs\": 2\n}\n"
+    },
+    {
+      "id": "reflex-arg-record",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "commands": [
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-record\",\"instruction\":\"print the billing batch tag\",\"steps\":[\"echo PASS batch={{arg1}}\"]}",
+          "exitCode": 0
+        },
+        {
+          "command": "graphflow task record \"print the billing batch tag\" --step \"echo PASS batch={{arg1}}\" --json --root /tmp/gf-reflex-eval",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"print the billing batch tag\",\"args\":[\"R3\"]}",
+          "exitCode": 0
+        }
+      ],
+      "metrics": {
+        "tokens_baseline": null,
+        "tokens_graphflow": 675,
+        "token_savings_ratio": null
+      },
+      "observed": {
+        "compiled": true,
+        "exit_code": 0,
+        "mcp_actions": [
+          "task-record",
+          "task-run"
+        ],
+        "snippets": [
+          "{{arg1}}",
+          "not-compiled-yet"
+        ],
+        "false_positives": [],
+        "raw_output": "$ MCP tools/call gf_macro {\"action\":\"task-record\",\"instruction\":\"print the billing batch tag\",\"steps\":[\"echo PASS batch={{arg1}}\"]}\nexit 0\nOK [task-recorded] id=t_b6bdb462b3 uses=1/2 not-compiled-yet instruction=\"print the billing batch tag\"\n\n$ graphflow task record \"print the billing batch tag\" --step \"echo PASS batch={{arg1}}\" --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"id\": \"t_b6bdb462b3\",\n  \"instructionRaw\": \"print the billing batch tag\",\n  \"instructionKey\": \"print bill batch tag\",\n  \"count\": 2,\n  \"steps\": [\n    \"echo PASS batch={{arg1}}\"\n  ],\n  \"createdAt\": \"2026-10-19T00:56:20.543Z\",\n  \"lastUsedAt\": \"2026-10-19T00:56:20.686Z\",\n  \"scriptPath\": \".graphflow/tasks/t_b6bdb462b3.mjs\"\n}\n\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"print the billing batch tag\",\"args\":[\"R3\"]}\nexit 0\n# Reflected Task t_b6bdb462b3 [uses=3, local-runner] exact normalized match\nInstruction: print the billing batch tag\n\nPASS [exit=0, 30ms] PASS batch=R3 | PASS [local-task] 1 step(s)\n\n# compiled runner\n#!/usr/bin/env node\n// Generated by GraphFlow task-reflector — deterministic local task runner.\n// Do not edit by hand: edit .graphflow/tasks.json and re-record the instruction.\nimport { spawnSync } from \"node:child_process\";\nimport { dirname, resolve, sep } from \"node:path\";\nimport { fileURLToPath } from \"node:url\";\n\nconst ROOT = resolve(dirname(fileURLToPath(import.meta.url)), \"..\", \"..\");\nconst STEPS = [{\"cmd\":\"echo PASS batch={{arg1}}\"}];\nconst ARGS = process.argv.slice(2);\nconst TIMEOUT_MS = 120000;\n\nfunction substitute(value) {\n  return value.replace(/\\{\\{args\\}\\}/g, ARGS.join(\" \")).replace(/\\{\\{arg(\\d+)\\}\\}/g, (_match, index) => ARGS[Number(index) - 1] ?? \"\");\n}\n\nfunction withinRoot(target) {\n  return target === ROOT || target.startsWith(ROOT + sep);\n}\n\nlet failed = false;\nfor (let i = 0; i < STEPS.length; i += 1) {\n  const step = STEPS[i];\n  const cmd = substitute(step.cmd);\n  const cwd = resolve(ROOT, step.cwd ?? \".\");\n  if (!withinRoot(cwd)) {\n    console.log(`ERR [unsafe-cwd] step ${i + 1}: ${cwd}`);\n    failed = true;\n    break;\n  }\n  console.log(`# step ${i + 1}/${STEPS.length}: ${cmd}`);\n  const result = spawnSync(cmd, {\n    cwd,\n    shell: true,\n    encoding: \"utf8\",\n    timeout: TIMEOUT_MS,\n    maxBuffer: 8 * 1024 * 1024,\n    windowsHide: true,\n  });\n  const output = `${result.stdout ?? \"\"}${result.stderr ?? \"\"}`;\n  if (output.trim().length > 0) console.log(output.trimEnd());\n  if (result.error) {\n    console.log(`ERR [step-error] ${result.error.message}`);\n    failed = true;\n    break;\n  }\n  if (result.status !== 0) {\n    failed = true;\n    break;\n  }\n}\nif (failed) process.exit(1);\nconsole.log(`PASS [local-task] ${STEPS.length} step(s)`);\n"
+      },
+      "evidence": "$ MCP tools/call gf_macro {\"action\":\"task-record\",\"instruction\":\"print the billing batch tag\",\"steps\":[\"echo PASS batch={{arg1}}\"]}\nexit 0\nOK [task-recorded] id=t_b6bdb462b3 uses=1/2 not-compiled-yet instruction=\"print the billing batch tag\"\n\n$ graphflow task record \"print the billing batch tag\" --step \"echo PASS batch={{arg1}}\" --json --root /tmp/gf-reflex-eval\nexit 0\n{\n  \"id\": \"t_b6bdb462b3\",\n  \"instructionRaw\": \"print the billing batch tag\",\n  \"instructionKey\": \"print bill batch tag\",\n  \"count\": 2,\n  \"steps\": [\n    \"echo PASS batch={{arg1}}\"\n  ],\n  \"createdAt\": \"2026-10-19T00:56:20.543Z\",\n  \"lastUsedAt\": \"2026-10-19T00:56:20.686Z\",\n  \"scriptPath\": \".graphflow/tasks/t_b6bdb462b3.mjs\"\n}\n\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"print the billing batch tag\",\"args\":[\"R3\"]}\nexit 0\n# Reflected Task t_b6bdb462b3 [uses=3, local-runner] exact normalized match\nInstruction: print the billing batch tag\n\nPASS [exit=0, 30ms] PASS batch=R3 | PASS [local-task] 1 step(s)"
+    },
+    {
+      "id": "reflex-token-rounds",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "commands": [
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}",
+          "exitCode": 0
+        },
+        {
+          "command": "MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}",
+          "exitCode": 0
+        }
+      ],
+      "metrics": {
+        "tokens_baseline": 750,
+        "tokens_graphflow": 252,
+        "token_savings_ratio": 0.664,
+        "rounds": 3,
+        "per_round_baseline": 250,
+        "per_round_graphflow": [
+          84,
+          84,
+          84
+        ]
+      },
+      "observed": {
+        "exit_code": 0,
+        "snippets": [
+          "PASS [exit=0"
+        ],
+        "false_positives": [],
+        "raw_output": "$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=7, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 98ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=8, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 99ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=9, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 94ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]"
+      },
+      "evidence": "$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=7, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 98ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=8, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 99ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]\n\n$ MCP tools/call gf_macro {\"action\":\"task-run\",\"instruction\":\"format lint and test billing package before release\"}\nexit 0\n# Reflected Task t_ec82285a44 [uses=9, local-runner] exact normalized match\nInstruction: format lint and test billing package before release\n\nPASS [exit=0, 94ms] PASS [local-task] 2 step(s) [raw 998B -> gfo:f5cbe115f441]"
+    }
+  ]
+}

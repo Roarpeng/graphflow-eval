@@ -15,6 +15,7 @@ graphflow-eval/
     run-tasks.mjs           checklist runner, writes a metrics JSON
     baseline-naive.mjs      whole-file and literal-search token estimates
     score.mjs               compare a run artifact with fixtures/tasks
+    run-reflex.mjs          GraphFlow 3.6.1 reflex-arc run (CLI + MCP stdio)
   packages/
     order-ts/               TypeScript order service
     billing-py/             Python invoice, tax, refund
@@ -124,6 +125,10 @@ node scripts/score.mjs --example
 | `fields` / `methods` / `parent_class` | Go embed and Rust trait |
 | `doc_links` | `section -> Symbol` strings |
 | `harvest` / `steps` | `HIT` plus the promoted shell steps |
+| `learn` | Log lines, promotion, compiled `.mjs`, idle harvest, MCP byte offset |
+| `reflect` / `exit_code` | Reflex HIT and the exit code parsed from `PASS [exit=` |
+| `near_score` / `below_miss` / `unrelated_miss` | Jaccard threshold checks |
+| `mcp_actions` | `gf_macro` actions actually called over MCP |
 | `tests_green` | `true` only after the package tests pass on the edited tree |
 | `metrics.tokens_baseline` / `tokens_graphflow` | `ceil(chars/4)` estimates |
 

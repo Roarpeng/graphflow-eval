@@ -1,0 +1,45 @@
+{
+  "id": "reflex-near-threshold",
+  "package": "billing-py",
+  "title": "Token-Jaccard 0.86 separates a near paraphrase from a miss",
+  "metric_focus": ["correctness", "safety"],
+  "tool": "gf_macro",
+  "steps": [
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-run \"format lint and test billing package before release quietly\"",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-run",
+          "instruction": "format lint and test billing package before release quietly"
+        }
+      },
+      "expect": "Near match. GraphFlow's token Jaccard is 0.875, above 0.86, and the runner executes."
+    },
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-run \"format lint and test billing before release\"",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-run",
+          "instruction": "format lint and test billing before release"
+        }
+      },
+      "expect": "Drops one content token. Jaccard 0.857 is below 0.86, so the tool returns MISS and does not run the steps."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow reflect \"ship the warehouse reservation hold\" --json",
+      "expect": "Unrelated instruction is MISS. hit is false and the process exit code is 1."
+    }
+  ],
+  "baseline": {
+    "files": []
+  },
+  "expected": {
+    "near": { "min_score": 0.86 },
+    "snippets": ["near match score=", "MISS [no-reflected-task]"]
+  }
+}

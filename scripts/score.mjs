@@ -166,6 +166,57 @@ function scoreExpected(expected, entry) {
     const blob = asList(observed.steps).join("\n");
     checks.push(check(`harvest-step:${step}`, blob.includes(step), step));
   }
+  if (expected.learn && typeof expected.learn === "object") {
+    const learn = observed.learn && typeof observed.learn === "object" ? observed.learn : {};
+    const minLines = expected.learn.min_log_lines ?? 2;
+    checks.push(check("log-lines", typeof learn.log_lines === "number" && learn.log_lines >= minLines, String(learn.log_lines ?? "")));
+    checks.push(check("promoted", learn.promoted === true, "promoted"));
+    checks.push(check("compiled-mjs", learn.compiled === true, learn.script_path ?? ""));
+    checks.push(check("tasks-json", learn.tasks_json === true, "tasks.json"));
+    checks.push(check("first-uncompiled", learn.first_compiled === false, String(learn.first_compiled)));
+    checks.push(check("idle-entries", learn.idle_entries === expected.learn.idle_entries, String(learn.idle_entries ?? "")));
+    checks.push(check("mcp-harvest-entries", learn.mcp_entries === expected.learn.mcp_entries, String(learn.mcp_entries ?? "")));
+    const advanced = typeof learn.offset_before_mcp === "number"
+      && typeof learn.offset_after_mcp === "number"
+      && learn.offset_after_mcp > learn.offset_before_mcp;
+    checks.push(check("offset-advanced", advanced, `${learn.offset_before_mcp} -> ${learn.offset_after_mcp}`));
+    checks.push(check(
+      "offset-matches-bytes",
+      typeof learn.log_bytes === "number" && learn.offset_after_mcp === learn.log_bytes,
+      `${learn.offset_after_mcp}/${learn.log_bytes}`,
+    ));
+  }
+  if (typeof expected.reflect === "string") {
+    checks.push(check("reflect", observed.reflect === expected.reflect, expected.reflect));
+  }
+  if (typeof expected.exit_code === "number") {
+    checks.push(check("exit_code", observed.exit_code === expected.exit_code, String(expected.exit_code)));
+  }
+  if (typeof expected.cli_exit_code === "number") {
+    checks.push(check("cli_exit_code", observed.cli_exit_code === expected.cli_exit_code, String(expected.cli_exit_code)));
+  }
+  for (const action of expected.mcp_actions ?? []) {
+    checks.push(check(`mcp:${action}`, asList(observed.mcp_actions).includes(action), action));
+  }
+  if (expected.compiled === true) {
+    checks.push(check("compiled", observed.compiled === true, "compiled"));
+  }
+  if (typeof expected.arg_rendered === "string") {
+    checks.push(check(`arg:${expected.arg_rendered}`, snippetBlob.includes(expected.arg_rendered), expected.arg_rendered));
+  }
+  if (expected.near && typeof expected.near === "object") {
+    const score = observed.near_score;
+    const minScore = expected.near.min_score ?? 0.86;
+    const scoreOk = typeof score === "number" && score >= minScore && score < 1;
+    checks.push(check("near-hit", observed.near_hit === true, "near_hit"));
+    checks.push(check("near-score", scoreOk, String(score)));
+    checks.push(check("below-miss", observed.below_miss === true, "below_miss"));
+    checks.push(check("unrelated-miss", observed.unrelated_miss === true, "unrelated_miss"));
+    checks.push(check("false-hit", observed.false_hit !== true, String(observed.false_hit)));
+  }
+  if (typeof expected.rounds === "number") {
+    checks.push(check("rounds", metrics.rounds === expected.rounds, String(metrics.rounds ?? "")));
+  }
   if (expected.tests_green === true) {
     checks.push(check("tests_green", observed.tests_green === true, "tests_green"));
   }
