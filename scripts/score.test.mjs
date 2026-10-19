@@ -3,8 +3,16 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import os from "node:os";
 import { estimateTokens, naiveSearch } from "./baseline-naive.mjs";
-import { buildDocumentedRun, simulateHarvest } from "./run-tasks.mjs";
+import {
+  buildDocumentedRun,
+  declarationStillPresent,
+  observeExecutedTask,
+  parseRenamedTo,
+  simulateHarvest,
+  testsGreenFromSteps,
+} from "./run-tasks.mjs";
 import { loadTaskFiles, scoreRun } from "./score.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -122,12 +130,14 @@ test("a foreign-receiver edit fails the safety gate", () => {
         metrics: { tokens_baseline: 100, tokens_graphflow: 100, token_savings_ratio: 0 },
         observed: {
           renamed_to: "cancelOrder",
-          unchanged_symbols: ["VipOrderService.cancel"],
+          unchanged_symbols: ["RefundService.cancel"],
           edited_files: [
             "packages/order-ts/src/services/order-service.ts",
             "packages/order-ts/src/services/vip-order-service.ts",
             "packages/order-ts/src/app/checkout.ts",
+            "packages/order-ts/src/app/vip-desk.ts",
             "packages/order-ts/__tests__/order-service.test.ts",
+            "packages/order-ts/__tests__/vip-order-service.test.ts",
             "packages/order-ts/src/services/refund-service.ts",
           ],
           false_positives: ["RefundService.cancel"],
@@ -307,4 +317,77 @@ test("reflex observations pass and a false near-hit fails the safety gate", () =
   const failReport = scoreRun(missed, byId);
   assert.equal(failReport.status, "fail");
   assert.equal(failReport.safety_gate, "fail");
+});
+
+test("execute extraction reads fake CLI output and a fake repo", () => {
+  const cli = [
+    "ERR [symbol-not-found] 'OrderService.cancel'",
+    "OK [renamed 'cancel' -> 'cancelDraft']",
+    "OK [renamed 'cancel' -> 'cancelOrder'] 4 occurrence(s) across 2 file(s): a.ts, b.ts",
+  ].join("\n");
+  assert.equal(parseRenamedTo(cli), "cancelOrder");
+  assert.equal(parseRenamedTo("REJECTED [ambiguous-symbol] 'cancel'"), null);
+
+  assert.equal(testsGreenFromSteps([
+    { command: "graphflow edit file --rename cancelOrder", exitCode: 0 },
+    { command: "npm run typecheck --prefix packages/order-ts && npm test --prefix packages/order-ts", exitCode: 0 },
+  ]), true);
+  assert.equal(testsGreenFromSteps([
+    { command: "npm run typecheck --prefix packages/order-ts && npm test --prefix packages/order-ts", exitCode: 2 },
+  ]), false);
+  assert.equal(testsGreenFromSteps([
+    { command: "graphflow read packages/order-ts/src/services/order-service.ts#OrderService.cancel", exitCode: 0 },
+  ]), null);
+
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "gf-eval-extract-"));
+  fs.mkdirSync(path.join(repo, "src"), { recursive: true });
+  fs.writeFileSync(path.join(repo, "src", "order.ts"), [
+    "export class OrderService {",
+    "  cancelOrder(order: Order, reason: string): Order {",
+    "    return order;",
+    "  }",
+    "  note() { return orders.cancel(order, \"buyer-request\"); }",
+    "}",
+    "",
+  ].join("\n"));
+  fs.writeFileSync(path.join(repo, "src", "refund.ts"), [
+    "export class RefundService {",
+    "  cancel(request: RefundRequest): RefundRequest {",
+    "    return request;",
+    "  }",
+    "}",
+    "",
+  ].join("\n"));
+  fs.writeFileSync(path.join(repo, "src", "partial.py"), [
+    "class RefundPolicy:",
+    "    def refundInvoice(self, invoice, amount):",
+    "        return invoice",
+    "",
+    "class PartialRefundPolicy(RefundPolicy):",
+    "    def refund(self, invoice, amount):",
+    "        return super().refundInvoice(invoice, amount)",
+    "",
+  ].join("\n"));
+
+  assert.equal(declarationStillPresent(repo, "RefundService.cancel"), true);
+  assert.equal(declarationStillPresent(repo, "OrderService.cancel"), false);
+  assert.equal(declarationStillPresent(repo, "OrderService.cancelOrder"), true);
+  assert.equal(declarationStillPresent(repo, "PartialRefundPolicy.refund"), true);
+  assert.equal(declarationStillPresent(repo, "RefundPolicy.refund"), false);
+
+  const observed = observeExecutedTask({
+    outputs: [
+      { command: "graphflow edit order.ts --rename cancelOrder", exitCode: 0, stdout: cli, stderr: "" },
+      { command: "npm run typecheck --prefix packages/order-ts && npm test --prefix packages/order-ts", exitCode: 1, stdout: "", stderr: "error TS4113: override" },
+    ],
+    diffNames: ["./src/order.ts", "src/order.ts", "src/vip.ts"],
+    rootDir: repo,
+    unchangedSymbols: ["RefundService.cancel", "OrderService.cancel", "PartialRefundPolicy.refund"],
+  });
+  assert.equal(observed.renamed_to, "cancelOrder");
+  assert.deepEqual(observed.edited_files, ["src/order.ts", "src/vip.ts"]);
+  assert.equal(observed.tests_green, false);
+  assert.deepEqual(observed.unchanged_symbols, ["RefundService.cancel", "PartialRefundPolicy.refund"]);
+  assert.match(observed.raw_output, /TS4113/);
+  fs.rmSync(repo, { recursive: true, force: true });
 });

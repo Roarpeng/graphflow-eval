@@ -3,7 +3,8 @@ import { OrderService } from "@order/services/order-service";
 
 /**
  * VIP 订单服务 / VIP subclass.
- * The override keeps the name `cancel` and delegates to the base method.
+ * The override is declared as `cancel` and delegates with `super.cancel`.
+ * Renaming `OrderService.cancel` renames this override to the same name.
  */
 export class VipOrderService extends OrderService {
   /**

@@ -77,19 +77,20 @@ Run that twice, then `graphflow task harvest --root packages/billing-py` and `gr
 
 ### 3. `ts-rename-safe`
 
-看什么：把 `OrderService.cancel` 重命名为 `cancelOrder`，外类的 `cancel` 保持原名，测试仍绿。
+看什么：把 `OrderService.cancel` 重命名为 `cancelOrder`。子类覆写跟着基类一起改名，否则 `override cancel` 不再覆写任何基类成员（`tsc` TS4113），多态调用 `buyerCancels(new VipOrderService(), …)` 会落到未加 `vip:` 前缀的基类实现。外类 `RefundService.cancel` 保持原名。类型检查和测试都要绿。
 
 ```bash
 graphflow edit packages/order-ts/src/services/order-service.ts \
   --symbol OrderService.cancel --rename cancelOrder
+npm run typecheck --prefix packages/order-ts && npm test --prefix packages/order-ts
 ```
 
-- Edit: `order-service.ts`, `vip-order-service.ts` (`super.cancel` → `super.cancelOrder`; the override declaration stays), `checkout.ts`, `order-service.test.ts`
-- Do not require an edit of `__tests__/checkout.test.ts`. That file has no standalone `cancel` identifier (`cancels`, `cancelled`, `cancelReason` only). Rewriting `cancelReason` would turn the package tests red.
-- Leave untouched: `RefundService.cancel`, `VipOrderService.cancel` (the override declaration), refund desk, vip desk, and their tests
-- `tests_green: true` via `npm test --prefix packages/order-ts`
+- Edit: `order-service.ts`, `vip-order-service.ts` (the override declaration `cancel` becomes `cancelOrder`, and `super.cancel` becomes `super.cancelOrder`), `checkout.ts`, `vip-desk.ts`, `order-service.test.ts`, `vip-order-service.test.ts`
+- Do not require an edit of `__tests__/checkout.test.ts` or `__tests__/vip-desk.test.ts`. Those files have no standalone `cancel` identifier (`cancels`, `cancelled`, `cancelReason` only).
+- Leave untouched: `RefundService.cancel`, the refund desk, and refund tests. `unchanged_symbols` is only `RefundService.cancel`.
+- `tests_green: true` only when both `tsc --noEmit` and vitest exit 0
 - Any path in `false_positives`, or an edit under `must_not_edit_files`, fails the safety gate
-- Do this on a worktree. Restore the names before committing.
+- `scripts/run-tasks.mjs --execute` runs each task in a temporary git worktree and deletes it. Do not rename on the main working tree.
 
 ### 4. `ts-zh-search`
 

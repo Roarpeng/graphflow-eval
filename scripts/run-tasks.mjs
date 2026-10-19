@@ -9,11 +9,14 @@
  *   node scripts/run-tasks.mjs --id ts-read-symbol-slice
  *   node scripts/run-tasks.mjs --execute --out results/latest.json
  *
- * --execute runs each step command (usually `graphflow ...`). Install the CLI
- * first, or set GRAPHFLOW_BIN. Fixture unit tests do not use this flag.
+ * --execute runs each task in a temporary git worktree, then deletes it.
+ * edited_files, renamed_to, tests_green, and unchanged_symbols are filled
+ * from that worktree. Install the CLI first, or set GRAPHFLOW_BIN.
+ * Fixture unit tests do not use this flag.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESTIMATION_METHOD, ESTIMATION_NOTE, estimateFilesTokens, estimateTokens, naiveSearch } from "./baseline-naive.mjs";
@@ -119,16 +122,198 @@ export function buildDocumentedRun(tasks, rootDir = ROOT, now = new Date().toISO
 }
 
 function commandExists(bin) {
+  if (bin.includes("/") || bin.includes("\\")) return fs.existsSync(bin);
   const probe = spawnSync(process.platform === "win32" ? "where" : "which", [bin], { encoding: "utf8" });
   return probe.status === 0;
+}
+
+const RENAMED_RE = /OK \[renamed '([^']*)' -> '([^']*)'\]/g;
+const SOURCE_EXTS = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".go", ".rs"]);
+
+/** Last `OK [renamed 'old' -> 'new']` new-name, or null when GraphFlow did not rename. */
+export function parseRenamedTo(text) {
+  let name = null;
+  for (const match of String(text ?? "").matchAll(RENAMED_RE)) name = match[2];
+  return name;
+}
+
+/** A shell step whose exit code is the task's tests_green bit. */
+export function isTestStep(command) {
+  return /(?:^|[\s;&|])(?:npm(?:\s+run)?\s+(?:test|typecheck)|python3?\s+-m\s+unittest|pytest|go\s+test|cargo\s+test)\b/.test(String(command ?? ""));
+}
+
+/** True when every test/typecheck step exited 0. Null when the task has no such step. */
+export function testsGreenFromSteps(outputs) {
+  const tests = (outputs ?? []).filter((item) => isTestStep(item.command));
+  if (tests.length === 0) return null;
+  return tests.every((item) => item.exitCode === 0);
+}
+
+export function normalizeDiffPaths(names) {
+  const out = [];
+  for (const name of names ?? []) {
+    const cleaned = String(name).replace(/\\/g, "/").replace(/^\.\//, "").trim();
+    if (cleaned && !out.includes(cleaned)) out.push(cleaned);
+  }
+  return out;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function walkSources(dir, out = []) {
+  if (!fs.existsSync(dir)) return out;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "target" || entry.name === "dist") continue;
+    const abs = path.join(dir, entry.name);
+    if (entry.isDirectory()) walkSources(abs, out);
+    else if (SOURCE_EXTS.has(path.extname(entry.name))) out.push(abs);
+  }
+  return out;
+}
+
+function languageOf(file) {
+  const ext = path.extname(file);
+  if (ext === ".py") return "py";
+  if (ext === ".go") return "go";
+  if (ext === ".rs") return "rs";
+  return "ts";
+}
+
+function methodDeclaration(method, language) {
+  const name = escapeRegExp(method);
+  if (language === "py") return new RegExp(`^\\s*(?:async\\s+)?def\\s+${name}\\s*\\(`, "m");
+  if (language === "go") return new RegExp(`^func\\s*\\([^\\n]*\\)\\s*${name}\\s*\\(`, "m");
+  if (language === "rs") return new RegExp(`^\\s*(?:pub(?:\\([^)]*\\))?\\s+)?(?:async\\s+)?fn\\s+${name}\\s*\\(`, "m");
+  return new RegExp(`^\\s*(?:export\\s+)?(?:public\\s+|private\\s+|protected\\s+|override\\s+|async\\s+|static\\s+|abstract\\s+|readonly\\s+)*${name}\\s*\\(`, "m");
+}
+
+function classBody(source, className, language) {
+  const name = escapeRegExp(className);
+  if (language === "py") {
+    const lines = source.split(/\n/);
+    const start = new RegExp(`^(\\s*)class\\s+${name}\\b`);
+    for (let i = 0; i < lines.length; i += 1) {
+      const match = start.exec(lines[i]);
+      if (!match) continue;
+      const indent = match[1].length;
+      const body = [];
+      for (let j = i + 1; j < lines.length; j += 1) {
+        const line = lines[j];
+        if (!line.trim()) {
+          body.push(line);
+          continue;
+        }
+        if ((line.match(/^\s*/)[0].length) <= indent) break;
+        body.push(line);
+      }
+      return body.join("\n");
+    }
+    return null;
+  }
+  if (language === "go") {
+    return new RegExp(`^func\\s*\\(\\s*\\w+\\s+\\*?${name}\\s*\\)[\\s\\S]*`, "m").test(source) ? source : null;
+  }
+  const start = new RegExp(`(?:^|\\n)([ \\t]*)(?:export\\s+)?(?:abstract\\s+)?class\\s+${name}\\b`);
+  const match = start.exec(source);
+  if (!match) return null;
+  const from = match.index + (source[match.index] === "\n" ? 1 : 0);
+  const open = source.indexOf("{", from);
+  if (open < 0) return null;
+  let depth = 0;
+  for (let i = open; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) return source.slice(open + 1, i);
+    }
+  }
+  return null;
+}
+
+/** True when `Class.method` (or a bare function name) is still declared in rootDir. */
+export function declarationStillPresent(rootDir, symbolId) {
+  const text = String(symbolId ?? "");
+  const dot = text.lastIndexOf(".");
+  const className = dot >= 0 ? text.slice(0, dot) : "";
+  const method = dot >= 0 ? text.slice(dot + 1) : text;
+  if (!method || !rootDir || !fs.existsSync(rootDir)) return false;
+  for (const file of walkSources(rootDir)) {
+    const source = fs.readFileSync(file, "utf8");
+    const language = languageOf(file);
+    const decl = methodDeclaration(method, language);
+    if (!className) {
+      if (decl.test(source)) return true;
+      continue;
+    }
+    const body = classBody(source, className, language);
+    if (body && decl.test(body)) return true;
+  }
+  return false;
+}
+
+export function unchangedSymbolsPresent(rootDir, symbols) {
+  return (symbols ?? []).filter((symbol) => declarationStillPresent(rootDir, symbol));
+}
+
+/**
+ * Safety fields a scorer can trust. `diffNames` is `git diff --name-only` output.
+ * `unchangedSymbols` is the task's expected list; only names still declared are kept.
+ */
+export function observeExecutedTask({ outputs, diffNames, rootDir, unchangedSymbols }) {
+  const stdout = (outputs ?? []).map((item) => item.stdout ?? "").join("\n");
+  const stderr = (outputs ?? []).map((item) => item.stderr ?? "").join("\n");
+  const combined = `${stdout}\n${stderr}`;
+  return {
+    renamed_to: parseRenamedTo(combined),
+    edited_files: normalizeDiffPaths(diffNames),
+    tests_green: testsGreenFromSteps(outputs),
+    unchanged_symbols: unchangedSymbolsPresent(rootDir, unchangedSymbols),
+    raw_output: combined.trim(),
+  };
+}
+
+function git(args, cwd) {
+  return spawnSync("git", args, { cwd, encoding: "utf8" });
+}
+
+function linkIgnoredDeps(sourceRoot, worktree) {
+  for (const rel of ["node_modules", "packages/order-ts/node_modules"]) {
+    const from = path.join(sourceRoot, rel);
+    const to = path.join(worktree, rel);
+    if (!fs.existsSync(from) || fs.existsSync(to)) continue;
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.symlinkSync(from, to, "dir");
+  }
+}
+
+function runInWorktree(rootDir, fn) {
+  const wt = fs.mkdtempSync(path.join(os.tmpdir(), "gf-eval-wt-"));
+  const added = git(["worktree", "add", "--detach", wt, "HEAD"], rootDir);
+  if (added.status !== 0) {
+    fs.rmSync(wt, { recursive: true, force: true });
+    throw new Error((added.stderr || added.stdout || "git worktree add failed").trim());
+  }
+  try {
+    linkIgnoredDeps(rootDir, wt);
+    return fn(wt);
+  } finally {
+    git(["worktree", "remove", "--force", wt], rootDir);
+    fs.rmSync(wt, { recursive: true, force: true });
+  }
 }
 
 export function executeRun(run, tasks, rootDir = ROOT, bin = process.env.GRAPHFLOW_BIN || "graphflow") {
   const byId = new Map(tasks.map((task) => [task.id, task]));
   const available = commandExists(bin);
   const next = structuredClone(run);
+  const version = available
+    ? spawnSync(bin, ["version"], { cwd: rootDir, encoding: "utf8" }).stdout?.trim() ?? null
+    : null;
   next.graphflow = {
-    version: null,
+    version: version || null,
     invoked: available,
     mode: available ? "cli" : "cli-missing",
     bin,
@@ -136,32 +321,49 @@ export function executeRun(run, tasks, rootDir = ROOT, bin = process.env.GRAPHFL
   const failures = [];
   for (const entry of next.tasks) {
     const task = byId.get(entry.id);
-    const outputs = [];
     if (!available) {
       failures.push(`${entry.id}: ${bin} not on PATH`);
       entry.observed = null;
       continue;
     }
-    for (const command of entry.planned_steps ?? []) {
-      const rewritten = command.startsWith("graphflow ")
-        ? `${bin}${command.slice("graphflow".length)}`
-        : command;
-      const result = spawnSync(rewritten, {
-        cwd: rootDir,
-        shell: true,
-        encoding: "utf8",
-        timeout: 120_000,
-        maxBuffer: 16 * 1024 * 1024,
+    let captured;
+    try {
+      captured = runInWorktree(rootDir, (wt) => {
+        const outputs = [];
+        for (const command of entry.planned_steps ?? []) {
+          const rewritten = command.startsWith("graphflow ")
+            ? `${bin}${command.slice("graphflow".length)}`
+            : command;
+          const result = spawnSync(rewritten, {
+            cwd: wt,
+            shell: true,
+            encoding: "utf8",
+            timeout: 180_000,
+            maxBuffer: 16 * 1024 * 1024,
+          });
+          outputs.push({
+            command: rewritten,
+            exitCode: result.status,
+            stdout: result.stdout ?? "",
+            stderr: result.stderr ?? "",
+          });
+          if (result.status !== 0) failures.push(`${entry.id}: ${rewritten}`);
+        }
+        const diff = git(["diff", "--name-only", "HEAD"], wt);
+        const observation = observeExecutedTask({
+          outputs,
+          diffNames: (diff.stdout ?? "").split(/\n/),
+          rootDir: wt,
+          unchangedSymbols: task?.expected?.unchanged_symbols ?? [],
+        });
+        return { outputs, observation };
       });
-      outputs.push({
-        command: rewritten,
-        exitCode: result.status,
-        stdout: result.stdout ?? "",
-        stderr: result.stderr ?? "",
-      });
-      if (result.status !== 0) failures.push(`${entry.id}: ${rewritten}`);
+    } catch (error) {
+      failures.push(`${entry.id}: ${error instanceof Error ? error.message : String(error)}`);
+      entry.observed = null;
+      continue;
     }
-    const stdout = outputs.map((item) => item.stdout).join("\n");
+    const stdout = captured.outputs.map((item) => item.stdout ?? "").join("\n");
     const graphflowTokens = estimateTokens(stdout);
     const baseline = entry.metrics?.tokens_baseline ?? 0;
     entry.metrics.tokens_graphflow = stdout.length > 0 ? graphflowTokens : null;
@@ -173,17 +375,18 @@ export function executeRun(run, tasks, rootDir = ROOT, bin = process.env.GRAPHFL
       snippets: [],
       callers: [],
       false_positives: [],
-      edited_files: [],
-      unchanged_symbols: [],
+      edited_files: captured.observation.edited_files,
+      unchanged_symbols: captured.observation.unchanged_symbols,
+      renamed_to: captured.observation.renamed_to,
       affected_tests: [],
       doc_links: [],
       steps: task?.expected?.harvest_steps ?? [],
       harvest: null,
-      tests_green: null,
-      raw_output: stdout,
-      cli: outputs,
+      tests_green: captured.observation.tests_green,
+      raw_output: captured.observation.raw_output,
+      cli: captured.outputs,
     };
-    entry.notes = "CLI stdout is in observed.raw_output. Copy symbol ids, callers, and safety fields from that output before treating the score as final. Snippet checks also read raw_output.";
+    entry.notes = "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner.";
   }
   return { run: next, failures };
 }
