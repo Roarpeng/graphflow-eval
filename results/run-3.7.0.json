@@ -1,0 +1,742 @@
+{
+  "run_id": "documented-2026-10-19T04:53:06.697Z",
+  "created_at": "2026-10-19T04:53:06.697Z",
+  "graphflow": {
+    "version": "3.7.0",
+    "invoked": true,
+    "mode": "cli",
+    "bin": "/tmp/gf-370/dist/cli.js"
+  },
+  "estimation": {
+    "method": "ceil(chars/4)",
+    "note": "tokens = ceil(character length / 4). Naive search adds a 2-line context window and counts each line once. Not a model tokenizer."
+  },
+  "tasks": [
+    {
+      "id": "cross-doc-link",
+      "package": "order-ts",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 237,
+        "tokens_graphflow": 34,
+        "token_savings_ratio": 0.8565,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow graph"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "OK [knowledge-graph] Generated interactive HTML graph (308 nodes, 554 edges) -> /tmp/gf-eval-wt-dCnGu2/.graphflow/knowledge-graph.html",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js graph",
+            "exitCode": 0,
+            "stdout": "OK [knowledge-graph] Generated interactive HTML graph (308 nodes, 554 edges) -> /tmp/gf-eval-wt-dCnGu2/.graphflow/knowledge-graph.html\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "go-embed-read",
+      "package": "inventory-go",
+      "tool": "gf_read",
+      "metrics": {
+        "tokens_baseline": 415,
+        "tokens_graphflow": 354,
+        "token_savings_ratio": 0.147,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow read packages/inventory-go/reservation.go#Reservation packages/inventory-go/reservation.go#Reservation.Hold packages/inventory-go/stock.go#StockItem.Available"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "### packages/inventory-go/reservation.go:5-10 [export struct Reservation]\n   5: type Reservation struct {\n   6: \tStockItem\n   7: \tID    string\n   8: \tQty   int\n   9: \tBuyer string\n  10: }\n// [Type Closure] packages/inventory-go/stock.go:6-10 (struct StockItem)\n   6: type StockItem struct {\n   7: \tSKU      string\n   8: \tOnHand   int\n   9: \tReserved int\n  10: }\n// [Blast Radius] 0 external callers/importers for Reservation\n### packages/inventory-go/reservation.go:13-25 [export method Hold]\n  13: func (r *Reservation) Hold() error {\n  14: \tif r == nil {\n  15: \t\treturn ErrUnknownReservation\n  16: \t}\n  17: \tif r.Qty <= 0 {\n  18: \t\treturn ErrBadQty\n  19: \t}\n  20: \tif r.Available() < r.Qty {\n// ... [5 lines omitted by read budget]\n// [Blast Radius: 3 call site(s)]\n// -> packages/inventory-go/reservation_test.go:12 in TestReservationHoldPromotesEmbeddedStock() [args=0]\n// -> packages/inventory-go/reservation_test.go:33 in TestReservationHoldRejectsShortage() [args=0]\n// -> packages/inventory-go/warehouse.go:20 in Reserve() [args=0]\n### packages/inventory-go/stock.go:13-22 [export method Available]\n  13: func (s *StockItem) Available() int {\n  14: \tif s == nil {\n  15: \t\treturn 0\n  16: \t}\n  17: \tn := s.OnHand - s.Reserved\n  18: \tif n < 0 {\n  19: \t\treturn 0\n  20: \t}\n// ... [2 lines omitted by read budget]\n// [Blast Radius: 6 call site(s)]\n// -> packages/inventory-go/reservation.go:20 in Hold() [args=0]",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js read packages/inventory-go/reservation.go#Reservation packages/inventory-go/reservation.go#Reservation.Hold packages/inventory-go/stock.go#StockItem.Available",
+            "exitCode": 0,
+            "stdout": "### packages/inventory-go/reservation.go:5-10 [export struct Reservation]\n   5: type Reservation struct {\n   6: \tStockItem\n   7: \tID    string\n   8: \tQty   int\n   9: \tBuyer string\n  10: }\n// [Type Closure] packages/inventory-go/stock.go:6-10 (struct StockItem)\n   6: type StockItem struct {\n   7: \tSKU      string\n   8: \tOnHand   int\n   9: \tReserved int\n  10: }\n// [Blast Radius] 0 external callers/importers for Reservation\n### packages/inventory-go/reservation.go:13-25 [export method Hold]\n  13: func (r *Reservation) Hold() error {\n  14: \tif r == nil {\n  15: \t\treturn ErrUnknownReservation\n  16: \t}\n  17: \tif r.Qty <= 0 {\n  18: \t\treturn ErrBadQty\n  19: \t}\n  20: \tif r.Available() < r.Qty {\n// ... [5 lines omitted by read budget]\n// [Blast Radius: 3 call site(s)]\n// -> packages/inventory-go/reservation_test.go:12 in TestReservationHoldPromotesEmbeddedStock() [args=0]\n// -> packages/inventory-go/reservation_test.go:33 in TestReservationHoldRejectsShortage() [args=0]\n// -> packages/inventory-go/warehouse.go:20 in Reserve() [args=0]\n### packages/inventory-go/stock.go:13-22 [export method Available]\n  13: func (s *StockItem) Available() int {\n  14: \tif s == nil {\n  15: \t\treturn 0\n  16: \t}\n  17: \tn := s.OnHand - s.Reserved\n  18: \tif n < 0 {\n  19: \t\treturn 0\n  20: \t}\n// ... [2 lines omitted by read budget]\n// [Blast Radius: 6 call site(s)]\n// -> packages/inventory-go/reservation.go:20 in Hold() [args=0]\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "py-super-blast",
+      "package": "billing-py",
+      "tool": "gf_edit",
+      "metrics": {
+        "tokens_baseline": 218,
+        "tokens_graphflow": 243,
+        "token_savings_ratio": -0.1147,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow read packages/billing-py/billing/refund.py#RefundPolicy.refund",
+        "graphflow edit packages/billing-py/billing/refund.py --symbol RefundPolicy.refund --rename refundInvoice",
+        "cd packages/billing-py && python3 -m unittest discover -s tests"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [
+          "packages/billing-py/billing/partial.py",
+          "packages/billing-py/billing/refund.py",
+          "packages/billing-py/billing/settle_full.py"
+        ],
+        "unchanged_symbols": [
+          "PartialRefundPolicy.refund"
+        ],
+        "renamed_to": "refundInvoice",
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": true,
+        "raw_output": "### packages/billing-py/billing/refund.py:13-15 [export method refund]\n  13:     def refund(self, invoice: Invoice, amount_cents: int) -> Invoice:\n  14:         \"\"\"按请求金额退款，不超过发票余额。\"\"\"\n  15:         return invoice.with_refund(amount_cents)\n// [Type Closure] packages/billing-py/billing/invoice.py:10-42 (class Invoice)\n  10: @dataclass(frozen=True)\n  11: class Invoice:\n  12:     \"\"\"一张发票。\n  13: \n  14:     `subtotal_cents` 是税前金额，`tax_cents` 由税额函数写入，\n  15:     `refunded_cents` 由退款策略累加。\n// ... [3 type-closure lines omitted by read budget]\n// [Blast Radius: 2 call site(s)]\n// -> packages/billing-py/billing/partial.py:15 in refund() [args=2]\n  15:         return super().refund(invoice, allowed)\n// -> packages/billing-py/billing/settle_full.py:9 in settle_full() [args=2]\n\nOK [renamed 'refund' -> 'refundInvoice'] 3 occurrence(s) across 3 file(s): packages/billing-py/billing/refund.py, packages/billing-py/billing/partial.py, packages/billing-py/billing/settle_full.py\n\n\n\n\n.......\n----------------------------------------------------------------------\nRan 7 tests in 0.000s\n\nOK",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js read packages/billing-py/billing/refund.py#RefundPolicy.refund",
+            "exitCode": 0,
+            "stdout": "### packages/billing-py/billing/refund.py:13-15 [export method refund]\n  13:     def refund(self, invoice: Invoice, amount_cents: int) -> Invoice:\n  14:         \"\"\"按请求金额退款，不超过发票余额。\"\"\"\n  15:         return invoice.with_refund(amount_cents)\n// [Type Closure] packages/billing-py/billing/invoice.py:10-42 (class Invoice)\n  10: @dataclass(frozen=True)\n  11: class Invoice:\n  12:     \"\"\"一张发票。\n  13: \n  14:     `subtotal_cents` 是税前金额，`tax_cents` 由税额函数写入，\n  15:     `refunded_cents` 由退款策略累加。\n// ... [3 type-closure lines omitted by read budget]\n// [Blast Radius: 2 call site(s)]\n// -> packages/billing-py/billing/partial.py:15 in refund() [args=2]\n  15:         return super().refund(invoice, allowed)\n// -> packages/billing-py/billing/settle_full.py:9 in settle_full() [args=2]\n",
+            "stderr": ""
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js edit packages/billing-py/billing/refund.py --symbol RefundPolicy.refund --rename refundInvoice",
+            "exitCode": 0,
+            "stdout": "OK [renamed 'refund' -> 'refundInvoice'] 3 occurrence(s) across 3 file(s): packages/billing-py/billing/refund.py, packages/billing-py/billing/partial.py, packages/billing-py/billing/settle_full.py\n",
+            "stderr": ""
+          },
+          {
+            "command": "cd packages/billing-py && python3 -m unittest discover -s tests",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.000s\n\nOK\n"
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "py-task-harvest-doc",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 117,
+        "tokens_graphflow": 166,
+        "token_savings_ratio": -0.4188,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow task harvest --log fixtures/instruction-logs/billing-maintenance.jsonl --json",
+        "graphflow reflect \"format lint and test billing\" --json"
+      ],
+      "simulator": {
+        "simulator": "eval-harvest-v1",
+        "note": "Counts whitespace-normalized repeated instructions. GraphFlow promotes at 2 uses and graphflow reflect returns HIT. This simulator does not compile or run the steps.",
+        "entriesRead": 2,
+        "entriesInvalid": 0,
+        "harvest": "HIT",
+        "promoted": [
+          {
+            "instruction": "format lint and test billing",
+            "uses": 2,
+            "steps": [
+              "python -m compileall -q billing",
+              "python -m unittest discover -s tests"
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [
+          "python -m compileall -q billing",
+          "python -m unittest discover -s tests"
+        ],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "{\n  \"logPath\": \"fixtures/instruction-logs/billing-maintenance.jsonl\",\n  \"entriesRead\": 2,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 2,\n  \"tasksPromoted\": [\n    \"t_0e1024b35c\"\n  ]\n}\n\n{\n  \"hit\": true,\n  \"text\": \"# Reflected Task t_0e1024b35c [uses=3, local-runner] exact normalized match\\nInstruction: format lint and test billing\\n\\nFAIL [exit=1, 31ms] cmd: task t_0e1024b35c format lint and test billing\\n\\n# step 1/2: python -m compileall -q billing\\n/bin/sh: 1: python: not found\\n# step 1/2: python -m compileall -q billing\\n/bin/sh: 1: python: not found\",\n  \"exitCode\": 1,\n  \"durationMs\": 31,\n  \"taskId\": \"t_0e1024b35c\",\n  \"matchedBy\": \"exact\",\n  \"score\": 1\n}",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js task harvest --log fixtures/instruction-logs/billing-maintenance.jsonl --json",
+            "exitCode": 0,
+            "stdout": "{\n  \"logPath\": \"fixtures/instruction-logs/billing-maintenance.jsonl\",\n  \"entriesRead\": 2,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 2,\n  \"tasksPromoted\": [\n    \"t_0e1024b35c\"\n  ]\n}\n",
+            "stderr": ""
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js reflect \"format lint and test billing\" --json",
+            "exitCode": 1,
+            "stdout": "{\n  \"hit\": true,\n  \"text\": \"# Reflected Task t_0e1024b35c [uses=3, local-runner] exact normalized match\\nInstruction: format lint and test billing\\n\\nFAIL [exit=1, 31ms] cmd: task t_0e1024b35c format lint and test billing\\n\\n# step 1/2: python -m compileall -q billing\\n/bin/sh: 1: python: not found\\n# step 1/2: python -m compileall -q billing\\n/bin/sh: 1: python: not found\",\n  \"exitCode\": 1,\n  \"durationMs\": 31,\n  \"taskId\": \"t_0e1024b35c\",\n  \"matchedBy\": \"exact\",\n  \"score\": 1\n}\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "reflex-arg-record",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 0,
+        "tokens_graphflow": 27,
+        "token_savings_ratio": null,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "gf_macro task-record",
+        "graphflow task record \"print the billing batch tag\" --step \"echo PASS batch={{arg1}}\"",
+        "gf_macro task-run --args R3"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "OK [task-recorded] id=t_b6bdb462b3 uses=1/2 not-compiled-yet instruction=\"print the billing batch tag\"\n\n\n/bin/sh: 1: gf_macro: not found\n\n\n/bin/sh: 1: gf_macro: not found",
+        "cli": [
+          {
+            "command": "gf_macro task-record",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js task record \"print the billing batch tag\" --step \"echo PASS batch={{arg1}}\"",
+            "exitCode": 0,
+            "stdout": "OK [task-recorded] id=t_b6bdb462b3 uses=1/2 not-compiled-yet instruction=\"print the billing batch tag\"\n",
+            "stderr": ""
+          },
+          {
+            "command": "gf_macro task-run --args R3",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "reflex-learn-loop",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 0,
+        "tokens_graphflow": 74,
+        "token_savings_ratio": null,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\"",
+        "graphflow task harvest --json",
+        "gf_macro task-harvest"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [
+          "cd packages/billing-py && python3 -m compileall -q billing",
+          "cd packages/billing-py && python3 -m unittest discover -s tests -v"
+        ],
+        "harvest": null,
+        "tests_green": true,
+        "raw_output": "OK [instruction-logged] at=2026-10-19T04:53:10.396Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n\n{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 1,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 1,\n  \"tasksPromoted\": []\n}\n\n\n\n\n/bin/sh: 1: gf_macro: not found",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js task log \"format lint and test billing package before release\" --step \"cd packages/billing-py && python3 -m compileall -q billing\" --step \"cd packages/billing-py && python3 -m unittest discover -s tests -v\"",
+            "exitCode": 0,
+            "stdout": "OK [instruction-logged] at=2026-10-19T04:53:10.396Z log=.graphflow/instruction-log.jsonl (run `graphflow task harvest` to promote repeated instructions)\n",
+            "stderr": ""
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js task harvest --json",
+            "exitCode": 0,
+            "stdout": "{\n  \"logPath\": \".graphflow/instruction-log.jsonl\",\n  \"entriesRead\": 1,\n  \"entriesInvalid\": 0,\n  \"usesRecorded\": 1,\n  \"tasksPromoted\": []\n}\n",
+            "stderr": ""
+          },
+          {
+            "command": "gf_macro task-harvest",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "reflex-mcp-invoke",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 0,
+        "tokens_graphflow": 1,
+        "token_savings_ratio": null,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "gf_macro task-list",
+        "gf_macro task-run"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "/bin/sh: 1: gf_macro: not found\n\n/bin/sh: 1: gf_macro: not found",
+        "cli": [
+          {
+            "command": "gf_macro task-list",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          },
+          {
+            "command": "gf_macro task-run",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "reflex-near-threshold",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 0,
+        "tokens_graphflow": 105,
+        "token_savings_ratio": null,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "gf_macro task-run \"format lint and test billing package before release quietly\"",
+        "gf_macro task-run \"format lint and test billing before release\"",
+        "graphflow reflect \"ship the warehouse reservation hold\" --json"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "{\n  \"hit\": false,\n  \"score\": 0,\n  \"text\": \"MISS [no-reflected-task] No reflected task matched \\\"ship the warehouse reservation hold\\\".\\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\\n  graphflow task record \\\"<instruction>\\\" --step \\\"<cmd>\\\"\\nor MCP gf_macro({ action: \\\"task-record\\\", instruction, steps: [\\\"<cmd>\\\"] }).\\n(jaccard=0.000)\",\n  \"exitCode\": 1,\n  \"durationMs\": 2\n}\n\n/bin/sh: 1: gf_macro: not found\n\n/bin/sh: 1: gf_macro: not found",
+        "cli": [
+          {
+            "command": "gf_macro task-run \"format lint and test billing package before release quietly\"",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          },
+          {
+            "command": "gf_macro task-run \"format lint and test billing before release\"",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js reflect \"ship the warehouse reservation hold\" --json",
+            "exitCode": 1,
+            "stdout": "{\n  \"hit\": false,\n  \"score\": 0,\n  \"text\": \"MISS [no-reflected-task] No reflected task matched \\\"ship the warehouse reservation hold\\\".\\nRecord the same instruction 2x with its shell steps to compile a local runner, e.g.\\n  graphflow task record \\\"<instruction>\\\" --step \\\"<cmd>\\\"\\nor MCP gf_macro({ action: \\\"task-record\\\", instruction, steps: [\\\"<cmd>\\\"] }).\\n(jaccard=0.000)\",\n  \"exitCode\": 1,\n  \"durationMs\": 2\n}\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "reflex-token-rounds",
+      "package": "billing-py",
+      "tool": "gf_macro",
+      "metrics": {
+        "tokens_baseline": 0,
+        "tokens_graphflow": null,
+        "token_savings_ratio": null,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "gf_macro task-run \"format lint and test billing package before release\""
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "/bin/sh: 1: gf_macro: not found",
+        "cli": [
+          {
+            "command": "gf_macro task-run \"format lint and test billing package before release\"",
+            "exitCode": 127,
+            "stdout": "",
+            "stderr": "/bin/sh: 1: gf_macro: not found\n"
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "rs-trait-dispatch",
+      "package": "device-rs",
+      "tool": "gf_read",
+      "metrics": {
+        "tokens_baseline": 523,
+        "tokens_graphflow": 191,
+        "token_savings_ratio": 0.6348,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow read packages/device-rs/src/device.rs#Device.read packages/device-rs/src/sensor.rs#Sensor.read"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "### packages/device-rs/src/device.rs:7-7 [export method read]\n   7:     fn read(&self) -> i32;\n// [Blast Radius: 2 call site(s)]\n// -> packages/device-rs/src/dispatch.rs:7 in poll_reading() [args=0]\n   7:     device.read()\n// -> packages/device-rs/src/dispatch.rs:12 in describe() [args=0]\n  12:     format!(\"{}={}\", device.id(), device.read())\n// [Linked Spec Doc] README.md#Packages / 夹具 (explicit ref `read`): | Package | Domain | What it stresses | Test | | --- | --- | --- | --- | | `p...\n\n### packages/device-rs/src/sensor.rs:23-25 [export method read]\n  23:     fn read(&self) -> i32 {\n  24:         self.reading\n  25:     }\n// [Blast Radius: 1 call site(s)]\n// -> packages/device-rs/src/dispatch.rs:17 in sensor_reading() [args=0]\n  17:     sensor.read()",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js read packages/device-rs/src/device.rs#Device.read packages/device-rs/src/sensor.rs#Sensor.read",
+            "exitCode": 0,
+            "stdout": "### packages/device-rs/src/device.rs:7-7 [export method read]\n   7:     fn read(&self) -> i32;\n// [Blast Radius: 2 call site(s)]\n// -> packages/device-rs/src/dispatch.rs:7 in poll_reading() [args=0]\n   7:     device.read()\n// -> packages/device-rs/src/dispatch.rs:12 in describe() [args=0]\n  12:     format!(\"{}={}\", device.id(), device.read())\n// [Linked Spec Doc] README.md#Packages / 夹具 (explicit ref `read`): | Package | Domain | What it stresses | Test | | --- | --- | --- | --- | | `p...\n\n### packages/device-rs/src/sensor.rs:23-25 [export method read]\n  23:     fn read(&self) -> i32 {\n  24:         self.reading\n  25:     }\n// [Blast Radius: 1 call site(s)]\n// -> packages/device-rs/src/dispatch.rs:17 in sensor_reading() [args=0]\n  17:     sensor.read()\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "ts-affected-tests",
+      "package": "order-ts",
+      "tool": "gf_exec",
+      "metrics": {
+        "tokens_baseline": 304,
+        "tokens_graphflow": 19,
+        "token_savings_ratio": 0.9375,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow exec affected-tests"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "PASS [affected-tests] 0 test files affected by changes (0 changed file(s)).",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js exec affected-tests",
+            "exitCode": 0,
+            "stdout": "PASS [affected-tests] 0 test files affected by changes (0 changed file(s)).\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "ts-blast-disambiguate",
+      "package": "order-ts",
+      "tool": "gf_read",
+      "metrics": {
+        "tokens_baseline": 1592,
+        "tokens_graphflow": 559,
+        "token_savings_ratio": 0.6489,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow read packages/order-ts/src/services/order-service.ts#OrderService.cancel"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "### packages/order-ts/src/services/order-service.ts:36-44 [export method cancel]\n  36:   cancel(order: Order, reason: string): Order {\n  37:     assertPending(order);\n  38:     const why = normalizeReason(reason);\n  39:     return {\n  40:       ...order,\n  41:       status: \"cancelled\",\n  42:       cancelReason: why,\n  43:     };\n  44:   }\n// [Type Closure] packages/order-ts/src/domain/order.ts:8-18 (interface Order)\n   8: export interface Order {\n   9:   id: string;\n  10:   /** 买家 / buyer id */\n  11:   buyerId: string;\n  12:   amountCents: number;\n  13:   status: OrderStatus;\n  14:   createdAt: number;\n  15:   paidAt?: number;\n  16:   cancelReason?: string;\n  17:   note?: string;\n  18: }\n// [Blast Radius: 5 call site(s)]\n// -> packages/order-ts/__tests__/order-service.test.ts:10 [args=2]\n   9:   it(\"cancels a pending order\", () => {\n  10:     const next = service.cancel(pendingOrder(), \"buyer-request\");\n  11:     expect(next.status).toBe(\"cancelled\");\n// -> packages/order-ts/__tests__/order-service.test.ts:32 [args=2]\n  31:   it(\"rejects a second cancel\", () => {\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n// -> packages/order-ts/__tests__/order-service.test.ts:33 [args=2]\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n  34:   });\n// -> packages/order-ts/src/app/checkout.ts:9 in buyerCancels() [args=2]\n   8: export function buyerCancels(orders: OrderService, order: Order): Order {\n   9:   return orders.cancel(order, \"buyer-request\");\n  10: }\n// -> packages/order-ts/src/services/vip-order-service.ts:15 in cancel() [args=2]\n  14:     const audited = reason.startsWith(\"vip:\") ? reason : `vip:${reason}`;\n  15:     return super.cancel(order, audited);\n  16:   }\n// [Linked Spec Doc] EVAL.md#1. `ts-read-symbol-slice` (explicit ref `cancel`): 看什么：只读 `OrderService.cancel`，不要为了这一个方法吞掉整个 `order-service.ts`。 - Tool: `gf_re...\n// [Linked Spec Doc] EVAL.md#2. `ts-blast-disambiguate` (explicit ref `cancel`): 看什么：`OrderService.cancel` 的爆炸半径不要算上 `RefundService.cancel`。 - Include caller ...",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js read packages/order-ts/src/services/order-service.ts#OrderService.cancel",
+            "exitCode": 0,
+            "stdout": "### packages/order-ts/src/services/order-service.ts:36-44 [export method cancel]\n  36:   cancel(order: Order, reason: string): Order {\n  37:     assertPending(order);\n  38:     const why = normalizeReason(reason);\n  39:     return {\n  40:       ...order,\n  41:       status: \"cancelled\",\n  42:       cancelReason: why,\n  43:     };\n  44:   }\n// [Type Closure] packages/order-ts/src/domain/order.ts:8-18 (interface Order)\n   8: export interface Order {\n   9:   id: string;\n  10:   /** 买家 / buyer id */\n  11:   buyerId: string;\n  12:   amountCents: number;\n  13:   status: OrderStatus;\n  14:   createdAt: number;\n  15:   paidAt?: number;\n  16:   cancelReason?: string;\n  17:   note?: string;\n  18: }\n// [Blast Radius: 5 call site(s)]\n// -> packages/order-ts/__tests__/order-service.test.ts:10 [args=2]\n   9:   it(\"cancels a pending order\", () => {\n  10:     const next = service.cancel(pendingOrder(), \"buyer-request\");\n  11:     expect(next.status).toBe(\"cancelled\");\n// -> packages/order-ts/__tests__/order-service.test.ts:32 [args=2]\n  31:   it(\"rejects a second cancel\", () => {\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n// -> packages/order-ts/__tests__/order-service.test.ts:33 [args=2]\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n  34:   });\n// -> packages/order-ts/src/app/checkout.ts:9 in buyerCancels() [args=2]\n   8: export function buyerCancels(orders: OrderService, order: Order): Order {\n   9:   return orders.cancel(order, \"buyer-request\");\n  10: }\n// -> packages/order-ts/src/services/vip-order-service.ts:15 in cancel() [args=2]\n  14:     const audited = reason.startsWith(\"vip:\") ? reason : `vip:${reason}`;\n  15:     return super.cancel(order, audited);\n  16:   }\n// [Linked Spec Doc] EVAL.md#1. `ts-read-symbol-slice` (explicit ref `cancel`): 看什么：只读 `OrderService.cancel`，不要为了这一个方法吞掉整个 `order-service.ts`。 - Tool: `gf_re...\n// [Linked Spec Doc] EVAL.md#2. `ts-blast-disambiguate` (explicit ref `cancel`): 看什么：`OrderService.cancel` 的爆炸半径不要算上 `RefundService.cancel`。 - Include caller ...\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "ts-read-symbol-slice",
+      "package": "order-ts",
+      "tool": "gf_read",
+      "metrics": {
+        "tokens_baseline": 938,
+        "tokens_graphflow": 559,
+        "token_savings_ratio": 0.4041,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow read packages/order-ts/src/services/order-service.ts#OrderService.cancel"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "### packages/order-ts/src/services/order-service.ts:36-44 [export method cancel]\n  36:   cancel(order: Order, reason: string): Order {\n  37:     assertPending(order);\n  38:     const why = normalizeReason(reason);\n  39:     return {\n  40:       ...order,\n  41:       status: \"cancelled\",\n  42:       cancelReason: why,\n  43:     };\n  44:   }\n// [Type Closure] packages/order-ts/src/domain/order.ts:8-18 (interface Order)\n   8: export interface Order {\n   9:   id: string;\n  10:   /** 买家 / buyer id */\n  11:   buyerId: string;\n  12:   amountCents: number;\n  13:   status: OrderStatus;\n  14:   createdAt: number;\n  15:   paidAt?: number;\n  16:   cancelReason?: string;\n  17:   note?: string;\n  18: }\n// [Blast Radius: 5 call site(s)]\n// -> packages/order-ts/__tests__/order-service.test.ts:10 [args=2]\n   9:   it(\"cancels a pending order\", () => {\n  10:     const next = service.cancel(pendingOrder(), \"buyer-request\");\n  11:     expect(next.status).toBe(\"cancelled\");\n// -> packages/order-ts/__tests__/order-service.test.ts:32 [args=2]\n  31:   it(\"rejects a second cancel\", () => {\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n// -> packages/order-ts/__tests__/order-service.test.ts:33 [args=2]\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n  34:   });\n// -> packages/order-ts/src/app/checkout.ts:9 in buyerCancels() [args=2]\n   8: export function buyerCancels(orders: OrderService, order: Order): Order {\n   9:   return orders.cancel(order, \"buyer-request\");\n  10: }\n// -> packages/order-ts/src/services/vip-order-service.ts:15 in cancel() [args=2]\n  14:     const audited = reason.startsWith(\"vip:\") ? reason : `vip:${reason}`;\n  15:     return super.cancel(order, audited);\n  16:   }\n// [Linked Spec Doc] EVAL.md#1. `ts-read-symbol-slice` (explicit ref `cancel`): 看什么：只读 `OrderService.cancel`，不要为了这一个方法吞掉整个 `order-service.ts`。 - Tool: `gf_re...\n// [Linked Spec Doc] EVAL.md#2. `ts-blast-disambiguate` (explicit ref `cancel`): 看什么：`OrderService.cancel` 的爆炸半径不要算上 `RefundService.cancel`。 - Include caller ...",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js read packages/order-ts/src/services/order-service.ts#OrderService.cancel",
+            "exitCode": 0,
+            "stdout": "### packages/order-ts/src/services/order-service.ts:36-44 [export method cancel]\n  36:   cancel(order: Order, reason: string): Order {\n  37:     assertPending(order);\n  38:     const why = normalizeReason(reason);\n  39:     return {\n  40:       ...order,\n  41:       status: \"cancelled\",\n  42:       cancelReason: why,\n  43:     };\n  44:   }\n// [Type Closure] packages/order-ts/src/domain/order.ts:8-18 (interface Order)\n   8: export interface Order {\n   9:   id: string;\n  10:   /** 买家 / buyer id */\n  11:   buyerId: string;\n  12:   amountCents: number;\n  13:   status: OrderStatus;\n  14:   createdAt: number;\n  15:   paidAt?: number;\n  16:   cancelReason?: string;\n  17:   note?: string;\n  18: }\n// [Blast Radius: 5 call site(s)]\n// -> packages/order-ts/__tests__/order-service.test.ts:10 [args=2]\n   9:   it(\"cancels a pending order\", () => {\n  10:     const next = service.cancel(pendingOrder(), \"buyer-request\");\n  11:     expect(next.status).toBe(\"cancelled\");\n// -> packages/order-ts/__tests__/order-service.test.ts:32 [args=2]\n  31:   it(\"rejects a second cancel\", () => {\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n// -> packages/order-ts/__tests__/order-service.test.ts:33 [args=2]\n  32:     const cancelled = service.cancel(pendingOrder(), \"duplicate\");\n  33:     expect(() => service.cancel(cancelled, \"again\")).toThrow(OrderClosedError);\n  34:   });\n// -> packages/order-ts/src/app/checkout.ts:9 in buyerCancels() [args=2]\n   8: export function buyerCancels(orders: OrderService, order: Order): Order {\n   9:   return orders.cancel(order, \"buyer-request\");\n  10: }\n// -> packages/order-ts/src/services/vip-order-service.ts:15 in cancel() [args=2]\n  14:     const audited = reason.startsWith(\"vip:\") ? reason : `vip:${reason}`;\n  15:     return super.cancel(order, audited);\n  16:   }\n// [Linked Spec Doc] EVAL.md#1. `ts-read-symbol-slice` (explicit ref `cancel`): 看什么：只读 `OrderService.cancel`，不要为了这一个方法吞掉整个 `order-service.ts`。 - Tool: `gf_re...\n// [Linked Spec Doc] EVAL.md#2. `ts-blast-disambiguate` (explicit ref `cancel`): 看什么：`OrderService.cancel` 的爆炸半径不要算上 `RefundService.cancel`。 - Include caller ...\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "ts-rename-safe",
+      "package": "order-ts",
+      "tool": "gf_edit",
+      "metrics": {
+        "tokens_baseline": 938,
+        "tokens_graphflow": 127,
+        "token_savings_ratio": 0.8646,
+        "naive_search_hits": null,
+        "naive_search_tokens": null
+      },
+      "planned_steps": [
+        "graphflow edit packages/order-ts/src/services/order-service.ts --symbol OrderService.cancel --rename cancelOrder",
+        "npm run typecheck --prefix packages/order-ts && npm test --prefix packages/order-ts"
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [
+          "packages/order-ts/__tests__/order-service.test.ts",
+          "packages/order-ts/src/app/checkout.ts",
+          "packages/order-ts/src/services/order-service.ts",
+          "packages/order-ts/src/services/vip-order-service.ts"
+        ],
+        "unchanged_symbols": [
+          "RefundService.cancel"
+        ],
+        "renamed_to": "cancelOrder",
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": false,
+        "raw_output": "OK [renamed 'cancel' -> 'cancelOrder'] 6 occurrence(s) across 4 file(s): packages/order-ts/src/services/order-service.ts, packages/order-ts/__tests__/order-service.test.ts, packages/order-ts/src/app/checkout.ts, packages/order-ts/src/services/vip-order-service.ts\n\n\n> @graphflow-eval/order-ts@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\nsrc/services/vip-order-service.ts(13,12): error TS4113: This member cannot have an 'override' modifier because it is not declared in the base class 'OrderService'.",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js edit packages/order-ts/src/services/order-service.ts --symbol OrderService.cancel --rename cancelOrder",
+            "exitCode": 0,
+            "stdout": "OK [renamed 'cancel' -> 'cancelOrder'] 6 occurrence(s) across 4 file(s): packages/order-ts/src/services/order-service.ts, packages/order-ts/__tests__/order-service.test.ts, packages/order-ts/src/app/checkout.ts, packages/order-ts/src/services/vip-order-service.ts\n",
+            "stderr": ""
+          },
+          {
+            "command": "npm run typecheck --prefix packages/order-ts && npm test --prefix packages/order-ts",
+            "exitCode": 2,
+            "stdout": "\n> @graphflow-eval/order-ts@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\nsrc/services/vip-order-service.ts(13,12): error TS4113: This member cannot have an 'override' modifier because it is not declared in the base class 'OrderService'.\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    },
+    {
+      "id": "ts-zh-search",
+      "package": "order-ts",
+      "tool": "gf_read",
+      "metrics": {
+        "tokens_baseline": 1245,
+        "tokens_graphflow": 1077,
+        "token_savings_ratio": 0.1349,
+        "naive_search_hits": 0,
+        "naive_search_tokens": 0
+      },
+      "planned_steps": [
+        "graphflow read -q \"订单超时\"",
+        "graphflow read -q \"dingdan zhifu\"",
+        "graphflow read -q \"支付订单\""
+      ],
+      "simulator": null,
+      "observed": {
+        "symbol_ids": [],
+        "snippets": [],
+        "callers": [],
+        "false_positives": [],
+        "edited_files": [],
+        "unchanged_symbols": [],
+        "renamed_to": null,
+        "affected_tests": [],
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "tests_green": null,
+        "raw_output": "# Locate & Slice (3 sliced, 29 total hits)\n[SLICED] packages/order-ts/src/handlers/timeout-handler.ts:13-30 (function handleDingDanChaoShi)\n[SLICED] packages/order-ts/src/services/order-service.ts:7-7 (variable TIMEOUT_WINDOW_MS)\n[SLICED] packages/order-ts/src/services/order-service.ts:69-77 (method timeout)\n[OTHER]  packages/order-ts/src/services/order-service.ts:29-120 (class OrderService)\n\n### packages/order-ts/src/handlers/timeout-handler.ts:13-30 [export function handleDingDanChaoShi]\n  13: export function handleDingDanChaoShi(\n  14:   service: OrderService,\n  15:   orders: readonly Order[],\n  16:   now = Date.now(),\n  17: ): TimeoutSweepResult {\n  18:   const closed: Order[] = [];\n  19:   const kept: Order[] = [];\n  20:   for (const order of orders) {\n  21:     if (order.status !== \"pending\") {\n  22:       kept.push(order);\n// ... [lines 23-30 omitted; call gf_read(targets=[\"packages/order-ts/src/handlers/timeout-handler.ts:23-30\"]) if needed]\n\n### packages/order-ts/src/services/order-service.ts:7-7 [export variable TIMEOUT_WINDOW_MS]\n   7: export const TIMEOUT_WINDOW_MS = 30 * 60 * 1000;\n\n### packages/order-ts/src/services/order-service.ts:69-77 [export method timeout]\n  69:   timeout(order: Order, now = Date.now()): Order {\n  70:     assertPending(order);\n  71:     if (!this.isExpired(order, now)) return order;\n  72:     return {\n  73:       ...order,\n  74:       status: \"timed_out\",\n  75:       cancelReason: \"timeout\",\n  76:     };\n  77:   }\n\n# Locate & Slice (1 sliced, 24 total hits)\n[SLICED] packages/order-ts/src/handlers/pay-handler.ts:9-14 (function handleDingDanZhiFu)\n[OTHER]  packages/order-ts/src/services/order-service.ts:29-120 (class OrderService)\n[OTHER]  packages/order-ts/src/services/order-service.ts:50-63 (method pay)\n[OTHER]  packages/order-ts/src/handlers/timeout-handler.ts:13-30 (function handleDingDanChaoShi)\n\n### packages/order-ts/src/handlers/pay-handler.ts:9-14 [export function handleDingDanZhiFu]\n   9: export function handleDingDanZhiFu(service: OrderService, order: Order, paidAt = Date.now()): Order {\n  10:   if (!service.canPay(order, paidAt)) {\n  11:     throw new Error(`order ${order.id} is not payable`);\n  12:   }\n  13:   return service.pay(order, paidAt);\n  14: }\n\n# Locate & Slice (3 sliced, 24 total hits)\n[SLICED] packages/order-ts/src/handlers/pay-handler.ts:9-14 (function handleDingDanZhiFu)\n[SLICED] packages/order-ts/src/services/order-service.ts:29-120 (class OrderService)\n[SLICED] packages/order-ts/src/services/order-service.ts:50-63 (method pay)\n[OTHER]  packages/order-ts/src/domain/order.ts:2-2 (type OrderStatus)\n\n### packages/order-ts/src/handlers/pay-handler.ts:9-14 [export function handleDingDanZhiFu]\n   9: export function handleDingDanZhiFu(service: OrderService, order: Order, paidAt = Date.now()): Order {\n  10:   if (!service.canPay(order, paidAt)) {\n  11:     throw new Error(`order ${order.id} is not payable`);\n  12:   }\n  13:   return service.pay(order, paidAt);\n  14: }\n\n### packages/order-ts/src/services/order-service.ts:29-120 [export class OrderService]\n  29: export class OrderService {\n  30:   constructor(private readonly windowMs = TIMEOUT_WINDOW_MS) {}\n  31: \n  32:   /**\n  33:    * 取消订单 / Cancel an unpaid order.\n  34:    * Synonyms in support docs: 作废, 撤单, 撤销.\n  35:    */\n  36:   cancel(order: Order, reason: string): Order {\n  37:     assertPending(order);\n  38:     const why = normalizeReason(reason);\n// ... [lines 39-120 omitted; call gf_read(targets=[\"packages/order-ts/src/services/order-service.ts:39-120\"]) if needed]\n\n### packages/order-ts/src/services/order-service.ts:50-63 [export method pay]\n  50:   pay(order: Order, paidAt = Date.now()): Order {\n  51:     assertPending(order);\n  52:     if (!Number.isInteger(order.amountCents) || order.amountCents <= 0) {\n  53:       throw new Error(`order ${order.id} amount must be a positive integer`);\n  54:     }\n  55:     if (!Number.isFinite(paidAt)) {\n  56:       throw new Error(\"paidAt must be a finite timestamp\");\n  57:     }\n  58:     return {\n  59:       ...order,\n// ... [lines 60-63 omitted; call gf_read(targets=[\"packages/order-ts/src/services/order-service.ts:60-63\"]) if needed]\n\n// [Auto-Recorded Tool] Repeated pattern promoted to macro 'bundle_fffb94cd': call gf_macro(action=\"run\", id=\"bundle_fffb94cd\") next time!",
+        "cli": [
+          {
+            "command": "/tmp/gf-370/dist/cli.js read -q \"订单超时\"",
+            "exitCode": 0,
+            "stdout": "# Locate & Slice (3 sliced, 29 total hits)\n[SLICED] packages/order-ts/src/handlers/timeout-handler.ts:13-30 (function handleDingDanChaoShi)\n[SLICED] packages/order-ts/src/services/order-service.ts:7-7 (variable TIMEOUT_WINDOW_MS)\n[SLICED] packages/order-ts/src/services/order-service.ts:69-77 (method timeout)\n[OTHER]  packages/order-ts/src/services/order-service.ts:29-120 (class OrderService)\n\n### packages/order-ts/src/handlers/timeout-handler.ts:13-30 [export function handleDingDanChaoShi]\n  13: export function handleDingDanChaoShi(\n  14:   service: OrderService,\n  15:   orders: readonly Order[],\n  16:   now = Date.now(),\n  17: ): TimeoutSweepResult {\n  18:   const closed: Order[] = [];\n  19:   const kept: Order[] = [];\n  20:   for (const order of orders) {\n  21:     if (order.status !== \"pending\") {\n  22:       kept.push(order);\n// ... [lines 23-30 omitted; call gf_read(targets=[\"packages/order-ts/src/handlers/timeout-handler.ts:23-30\"]) if needed]\n\n### packages/order-ts/src/services/order-service.ts:7-7 [export variable TIMEOUT_WINDOW_MS]\n   7: export const TIMEOUT_WINDOW_MS = 30 * 60 * 1000;\n\n### packages/order-ts/src/services/order-service.ts:69-77 [export method timeout]\n  69:   timeout(order: Order, now = Date.now()): Order {\n  70:     assertPending(order);\n  71:     if (!this.isExpired(order, now)) return order;\n  72:     return {\n  73:       ...order,\n  74:       status: \"timed_out\",\n  75:       cancelReason: \"timeout\",\n  76:     };\n  77:   }\n",
+            "stderr": ""
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js read -q \"dingdan zhifu\"",
+            "exitCode": 0,
+            "stdout": "# Locate & Slice (1 sliced, 24 total hits)\n[SLICED] packages/order-ts/src/handlers/pay-handler.ts:9-14 (function handleDingDanZhiFu)\n[OTHER]  packages/order-ts/src/services/order-service.ts:29-120 (class OrderService)\n[OTHER]  packages/order-ts/src/services/order-service.ts:50-63 (method pay)\n[OTHER]  packages/order-ts/src/handlers/timeout-handler.ts:13-30 (function handleDingDanChaoShi)\n\n### packages/order-ts/src/handlers/pay-handler.ts:9-14 [export function handleDingDanZhiFu]\n   9: export function handleDingDanZhiFu(service: OrderService, order: Order, paidAt = Date.now()): Order {\n  10:   if (!service.canPay(order, paidAt)) {\n  11:     throw new Error(`order ${order.id} is not payable`);\n  12:   }\n  13:   return service.pay(order, paidAt);\n  14: }\n",
+            "stderr": ""
+          },
+          {
+            "command": "/tmp/gf-370/dist/cli.js read -q \"支付订单\"",
+            "exitCode": 0,
+            "stdout": "# Locate & Slice (3 sliced, 24 total hits)\n[SLICED] packages/order-ts/src/handlers/pay-handler.ts:9-14 (function handleDingDanZhiFu)\n[SLICED] packages/order-ts/src/services/order-service.ts:29-120 (class OrderService)\n[SLICED] packages/order-ts/src/services/order-service.ts:50-63 (method pay)\n[OTHER]  packages/order-ts/src/domain/order.ts:2-2 (type OrderStatus)\n\n### packages/order-ts/src/handlers/pay-handler.ts:9-14 [export function handleDingDanZhiFu]\n   9: export function handleDingDanZhiFu(service: OrderService, order: Order, paidAt = Date.now()): Order {\n  10:   if (!service.canPay(order, paidAt)) {\n  11:     throw new Error(`order ${order.id} is not payable`);\n  12:   }\n  13:   return service.pay(order, paidAt);\n  14: }\n\n### packages/order-ts/src/services/order-service.ts:29-120 [export class OrderService]\n  29: export class OrderService {\n  30:   constructor(private readonly windowMs = TIMEOUT_WINDOW_MS) {}\n  31: \n  32:   /**\n  33:    * 取消订单 / Cancel an unpaid order.\n  34:    * Synonyms in support docs: 作废, 撤单, 撤销.\n  35:    */\n  36:   cancel(order: Order, reason: string): Order {\n  37:     assertPending(order);\n  38:     const why = normalizeReason(reason);\n// ... [lines 39-120 omitted; call gf_read(targets=[\"packages/order-ts/src/services/order-service.ts:39-120\"]) if needed]\n\n### packages/order-ts/src/services/order-service.ts:50-63 [export method pay]\n  50:   pay(order: Order, paidAt = Date.now()): Order {\n  51:     assertPending(order);\n  52:     if (!Number.isInteger(order.amountCents) || order.amountCents <= 0) {\n  53:       throw new Error(`order ${order.id} amount must be a positive integer`);\n  54:     }\n  55:     if (!Number.isFinite(paidAt)) {\n  56:       throw new Error(\"paidAt must be a finite timestamp\");\n  57:     }\n  58:     return {\n  59:       ...order,\n// ... [lines 60-63 omitted; call gf_read(targets=[\"packages/order-ts/src/services/order-service.ts:60-63\"]) if needed]\n\n// [Auto-Recorded Tool] Repeated pattern promoted to macro 'bundle_fffb94cd': call gf_macro(action=\"run\", id=\"bundle_fffb94cd\") next time!\n",
+            "stderr": ""
+          }
+        ]
+      },
+      "notes": "edited_files, renamed_to, tests_green, and unchanged_symbols are filled from the worktree. symbol_ids, callers, snippets, affected_tests, doc_links, and harvest are not extracted by this runner."
+    }
+  ]
+}
