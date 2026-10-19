@@ -1,0 +1,52 @@
+{
+  "id": "rs-trait-dispatch",
+  "package": "device-rs",
+  "title": "Separate trait receivers from concrete impl receivers",
+  "metric_focus": ["correctness"],
+  "tool": "gf_read",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow read packages/device-rs/src/device.rs#Device.read packages/device-rs/src/sensor.rs#Sensor.read",
+      "mcp": {
+        "tool": "gf_read",
+        "arguments": {
+          "targets": [
+            "packages/device-rs/src/device.rs#Device.read",
+            "packages/device-rs/src/sensor.rs#Sensor.read"
+          ]
+        }
+      },
+      "expect": "Device.read parent is Device. dyn Device and impl Device callers attach to the trait. Sensor.read parent is Sensor and only sensor_reading attaches to the concrete impl."
+    }
+  ],
+  "baseline": {
+    "files": [
+      "packages/device-rs/src/device.rs",
+      "packages/device-rs/src/sensor.rs",
+      "packages/device-rs/src/dispatch.rs"
+    ]
+  },
+  "expected": {
+    "symbol_ids": [
+      "packages/device-rs/src/device.rs#Device.read",
+      "packages/device-rs/src/sensor.rs#Sensor.read"
+    ],
+    "parent_class": {
+      "Device.read": "Device",
+      "Sensor.read": "Sensor"
+    },
+    "callers_include": [
+      "Device.read <- poll_reading",
+      "Device.read <- describe",
+      "Sensor.read <- sensor_reading"
+    ],
+    "callers_exclude": [
+      "Device.read <- sensor_reading",
+      "Device.read <- actuator_reading",
+      "Sensor.read <- poll_reading",
+      "Sensor.read <- describe",
+      "Sensor.read <- actuator_reading"
+    ]
+  }
+}

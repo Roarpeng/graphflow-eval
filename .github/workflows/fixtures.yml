@@ -1,0 +1,56 @@
+name: fixtures
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  scorer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+
+  order-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix packages/order-ts
+      - run: npm test --prefix packages/order-ts
+      - run: npm run typecheck --prefix packages/order-ts
+
+  billing-py:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s tests
+        working-directory: packages/billing-py
+      - run: python -m compileall -q billing
+        working-directory: packages/billing-py
+
+  inventory-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go test ./...
+        working-directory: packages/inventory-go
+
+  device-rs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test
+        working-directory: packages/device-rs

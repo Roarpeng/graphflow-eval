@@ -1,0 +1,50 @@
+{
+  "id": "reflex-arg-record",
+  "package": "billing-py",
+  "title": "Explicit task record compiles {{arg1}} and MCP task-run substitutes it",
+  "metric_focus": ["correctness"],
+  "tool": "gf_macro",
+  "steps": [
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-record",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-record",
+          "instruction": "print the billing batch tag",
+          "steps": ["echo PASS batch={{arg1}}"]
+        }
+      },
+      "expect": "First explicit record stays uncompiled."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow task record \"print the billing batch tag\" --step \"echo PASS batch={{arg1}}\"",
+      "expect": "Second record compiles .graphflow/tasks/<id>.mjs. The source still contains {{arg1}}."
+    },
+    {
+      "kind": "mcp",
+      "command": "gf_macro task-run --args R3",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-run",
+          "instruction": "print the billing batch tag",
+          "args": ["R3"]
+        }
+      },
+      "expect": "Replay prints batch=R3 and exits 0."
+    }
+  ],
+  "baseline": {
+    "files": []
+  },
+  "expected": {
+    "compiled": true,
+    "arg_rendered": "PASS batch=R3",
+    "exit_code": 0,
+    "mcp_actions": ["task-record", "task-run"],
+    "snippets": ["{{arg1}}", "not-compiled-yet"]
+  }
+}

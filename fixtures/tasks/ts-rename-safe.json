@@ -1,0 +1,50 @@
+{
+  "id": "ts-rename-safe",
+  "package": "order-ts",
+  "title": "Rename OrderService.cancel to cancelOrder without touching RefundService.cancel",
+  "metric_focus": ["safety", "correctness"],
+  "tool": "gf_edit",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow edit packages/order-ts/src/services/order-service.ts --symbol OrderService.cancel --rename cancelOrder",
+      "mcp": {
+        "tool": "gf_edit",
+        "arguments": {
+          "file": "packages/order-ts/src/services/order-service.ts",
+          "symbol": "OrderService.cancel",
+          "renameTo": "cancelOrder"
+        }
+      },
+      "expect": "Rename the base method and its OrderService call sites, including super.cancel. Leave RefundService.cancel and VipOrderService.cancel declarations unchanged."
+    },
+    {
+      "kind": "cli",
+      "command": "npm test --prefix packages/order-ts",
+      "expect": "The package test script passes. Restore the worktree when you finish; main stays on the original names."
+    }
+  ],
+  "baseline": {
+    "files": ["packages/order-ts/src/services/order-service.ts"]
+  },
+  "expected": {
+    "renamed_to": "cancelOrder",
+    "unchanged_symbols": ["RefundService.cancel", "VipOrderService.cancel"],
+    "must_edit_files": [
+      "packages/order-ts/src/services/order-service.ts",
+      "packages/order-ts/src/services/vip-order-service.ts",
+      "packages/order-ts/src/app/checkout.ts",
+      "packages/order-ts/__tests__/order-service.test.ts"
+    ],
+    "must_not_edit_files": [
+      "packages/order-ts/src/services/refund-service.ts",
+      "packages/order-ts/src/app/refund-desk.ts",
+      "packages/order-ts/src/app/vip-desk.ts",
+      "packages/order-ts/__tests__/refund-service.test.ts",
+      "packages/order-ts/__tests__/refund-desk.test.ts",
+      "packages/order-ts/__tests__/vip-order-service.test.ts",
+      "packages/order-ts/__tests__/vip-desk.test.ts"
+    ],
+    "tests_green": true
+  }
+}

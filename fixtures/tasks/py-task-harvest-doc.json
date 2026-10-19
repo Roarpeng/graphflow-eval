@@ -1,0 +1,37 @@
+{
+  "id": "py-task-harvest-doc",
+  "package": "billing-py",
+  "title": "Two logged maintenance passes promote a reflect HIT",
+  "metric_focus": ["correctness"],
+  "tool": "gf_macro",
+  "instruction_log": "fixtures/instruction-logs/billing-maintenance.jsonl",
+  "steps": [
+    {
+      "kind": "cli",
+      "command": "graphflow task harvest --log fixtures/instruction-logs/billing-maintenance.jsonl --json",
+      "mcp": {
+        "tool": "gf_macro",
+        "arguments": {
+          "action": "task-harvest",
+          "logPath": "fixtures/instruction-logs/billing-maintenance.jsonl"
+        }
+      },
+      "expect": "The log already contains the same instruction twice. Harvest promotes it. graphflow reflect then returns HIT."
+    },
+    {
+      "kind": "cli",
+      "command": "graphflow reflect \"format lint and test billing\" --json",
+      "expect": "JSON hit is true. The runner executes compileall and unittest from packages/billing-py."
+    }
+  ],
+  "baseline": {
+    "files": ["fixtures/instruction-logs/billing-maintenance.jsonl"]
+  },
+  "expected": {
+    "harvest": "HIT",
+    "harvest_steps": [
+      "python -m compileall -q billing",
+      "python -m unittest discover -s tests"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+[package]
+name = "device"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Device trait fixture for GraphFlow eval (dyn Trait / impl Trait / concrete)."
+license = "Apache-2.0"
+
+[dependencies]

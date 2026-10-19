@@ -1,0 +1,51 @@
+{
+  "run_id": "example-ts-read-symbol-slice",
+  "created_at": "2026-10-18T00:00:00.000Z",
+  "graphflow": {
+    "version": "3.6.1",
+    "invoked": true,
+    "mode": "cli"
+  },
+  "estimation": {
+    "method": "ceil(chars/4)",
+    "note": "Illustrative passing slice. Replace tokens with a real GraphFlow run before quoting savings."
+  },
+  "tasks": [
+    {
+      "id": "ts-read-symbol-slice",
+      "package": "order-ts",
+      "tool": "gf_read",
+      "metrics": {
+        "tokens_baseline": 800,
+        "tokens_graphflow": 180,
+        "token_savings_ratio": 0.775
+      },
+      "observed": {
+        "symbol_ids": [
+          "packages/order-ts/src/services/order-service.ts#OrderService.cancel"
+        ],
+        "snippets": [
+          "cancel(order: Order, reason: string)"
+        ],
+        "callers": [],
+        "false_positives": [],
+        "rejected": [],
+        "edited_files": [],
+        "edited_symbols": [],
+        "unchanged_symbols": [],
+        "affected_tests": [],
+        "hits": [],
+        "fields": [],
+        "methods": [],
+        "parent_class": {},
+        "doc_links": [],
+        "steps": [],
+        "harvest": null,
+        "renamed_to": null,
+        "tests_green": null,
+        "raw_output": ""
+      },
+      "notes": "Shape example for one passing gf_read. A full checklist repeats this task object."
+    }
+  ]
+}

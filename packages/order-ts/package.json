@@ -1,0 +1,15 @@
+{
+  "name": "@graphflow-eval/order-ts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Order domain fixture for GraphFlow eval (cancel / pay / timeout).",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^5.0.5"
+  }
+}
